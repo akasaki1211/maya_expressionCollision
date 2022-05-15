@@ -12,6 +12,8 @@ def iplane(*args):
     setOverrideColor(sh, 17)
     cmds.connectAttr(root + '.displayType', sh + '.overrideDisplayType', f=True)
 
+    return root
+
 def sphere(*args):
     root, makeSphere = cmds.sphere(s=8, nsp=4, ax=[0,1,0], n=getUniqueName('sphereCollider'))
     lockHideAttr(root, ['sx','sy','sz'])
@@ -25,6 +27,8 @@ def sphere(*args):
     sh = cmds.listRelatives(root, s=True)[0]
     setOverrideColor(sh, 17)
     cmds.connectAttr(root + '.displayType', sh + '.overrideDisplayType', f=True)
+
+    return root
     
 def capsule(*args):
     root = cmds.createNode('transform', n=getUniqueName('capsuleCollider'))
@@ -81,6 +85,8 @@ def capsule(*args):
     cmds.connectAttr(root + '.displayType', sphere1[0] + '.overrideDisplayType', f=True)
     cmds.connectAttr(root + '.displayType', sphere2[0] + '.overrideDisplayType', f=True)
     cmds.connectAttr(root + '.displayType', cylinder[0] + '.overrideDisplayType', f=True)
+
+    return root
 
 def capsule2(*args):
     root = cmds.createNode('transform', n=getUniqueName('capsule2Collider'))
@@ -148,6 +154,8 @@ def capsule2(*args):
     cmds.connectAttr(root + '.displayType', sphere1[0] + '.overrideDisplayType', f=True)
     cmds.connectAttr(root + '.displayType', sphere2[0] + '.overrideDisplayType', f=True)
     cmds.connectAttr(root + '.displayType', loftedSurface[0] + '.overrideDisplayType', f=True)
+
+    return root
 
 def getUniqueName(n, *args):
     flag = True
