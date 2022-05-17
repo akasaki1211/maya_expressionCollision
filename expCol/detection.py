@@ -2,6 +2,19 @@
 import maya.cmds as cmds
 import math
 
+def undoWrapper(function):
+    """
+        undo wrapper (used in decorator)
+    """
+    def wrapper(*args, **kwargs):
+        cmds.undoInfo(ock=True)
+        result = function(*args, **kwargs)
+        cmds.undoInfo(cck=True)
+        return result
+
+    return wrapper
+
+@undoWrapper
 def create(parent, input, output, controller, colliders=[], groundCol=False, *args):
     
     if not parent or not input or not output or not controller:

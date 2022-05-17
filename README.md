@@ -25,25 +25,76 @@ Please do one of the following:
 * Add the parent directory of expCol to PYTHONPATH in Maya.env.
 
 # Usage
+## Create Collider
 ```
-from expCol import collider, detection
+from expCol import collider
 
-# Create Collider
-collider_list = []
-collider_list.append(collider.iplane())
-collider_list.append(collider.sphere())
-collider_list.append(collider.capsule())
-collider_list.append(collider.capsule2())
+collider.iplane()
+collider.sphere()
+collider.capsule()
+collider.capsule2()
+```
 
-# Create Detection
+## Create Detection
+```
+from expCol import detection
+
 detection.create('parent', 'input', 'output', 
                 'controller', 
                 colliders=collider_list, 
                 groundCol=True)
+```
+* parent : Parent 'transform'.  
+* input : Child 'transform' before correction.  
+* output : Child 'transform' after correction.   
+  -> For more information, please check [this explanation](https://twitter.com/akasaki1211/status/1489478989039108099).  
+* controller : Any node to add attributes for control.  
+* colliders : Name array of colliders created.
+* groundCol : Add horizontal plane collision. (*optional)
+
+
+## Example
+```
+import maya.cmds as cmds
+from expCol import collider, detection
+
+# sample joint chain
+rootCtl = cmds.createNode('transform', n='rootCtl')
+jointList = []
+for i in range(4):
+    roz = 0 if i else -90
+    jointList.append(cmds.joint(n='joint_{}'.format(i), p=[0,-i*3,0], o=[0,0,roz]))
+cmds.setAttr(rootCtl+'.ty', 10)
+
+for i in range(len(jointList)-1):
+    p = cmds.listRelatives(jointList[i], p=1)[0]
+    pos1 = cmds.xform(jointList[i], q=1, ws=1, t=1)
+    pos2 = cmds.xform(cmds.listRelatives(jointList[i],c=1)[0], q=1, ws=1, t=1)
+    prt = cmds.createNode('transform', n='parent_{}'.format(i), p=p)
+    ipt = cmds.createNode('transform', n='input_{}'.format(i), p=p)
+    out = cmds.createNode('transform', n='output_{}'.format(i), p=p)
+    cmds.xform(prt, ws=1, t=pos1)
+    cmds.xform(ipt, ws=1, t=pos2)
+    cmds.xform(out, ws=1, t=pos2)
+    cmds.aimConstraint(out, jointList[i], u=[0,0,1], wu=[0,0,1], wut='objectrotation', wuo=prt)
+
+
+# Create Colliders
+collider_list = []
+collider_list.append(collider.iplane())
+collider_list.append(collider.capsule())
+
+# Create Detections
+for i in range(len(jointList)-1):
+    detection.create('parent_{}'.format(i), 
+                    'input_{}'.format(i), 
+                    'output_{}'.format(i), 
+                    'rootCtl', 
+                    colliders=collider_list, 
+                    groundCol=True)
 ```
 
 # Note
 * A large number of detections can be very heavy.
 * The number of colliders cannot be changed after a detection (expression node) is created.
 * Scale is not supported.
-* [Explanation on twitter](https://twitter.com/akasaki1211/status/1489478989039108099)

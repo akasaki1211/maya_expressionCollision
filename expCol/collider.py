@@ -1,6 +1,19 @@
 # -*- coding: utf-8 -*-
 import maya.cmds as cmds
 
+def undoWrapper(function):
+    """
+        undo wrapper (used in decorator)
+    """
+    def wrapper(*args, **kwargs):
+        cmds.undoInfo(ock=True)
+        result = function(*args, **kwargs)
+        cmds.undoInfo(cck=True)
+        return result
+
+    return wrapper
+
+@undoWrapper
 def iplane(*args):
     root, makePlane = cmds.nurbsPlane(ax=[0,1,0], w=1, lr=1, d=3, u=1, v=1, n=getUniqueName('infinitePlaneCollider'))
     addCommonAttr(root, 'infinitePlane')
@@ -14,6 +27,7 @@ def iplane(*args):
 
     return root
 
+@undoWrapper
 def sphere(*args):
     root, makeSphere = cmds.sphere(s=8, nsp=4, ax=[0,1,0], n=getUniqueName('sphereCollider'))
     lockHideAttr(root, ['sx','sy','sz'])
@@ -30,6 +44,7 @@ def sphere(*args):
 
     return root
     
+@undoWrapper
 def capsule(*args):
     root = cmds.createNode('transform', n=getUniqueName('capsuleCollider'))
     lockHideAttr(root, ['sx','sy','sz'])
@@ -88,6 +103,7 @@ def capsule(*args):
 
     return root
 
+@undoWrapper
 def capsule2(*args):
     root = cmds.createNode('transform', n=getUniqueName('capsule2Collider'))
     lockHideAttr(root, ['sx','sy','sz'])
