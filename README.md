@@ -47,7 +47,7 @@ detection.create('parent', 'input', 'output',
 * parent : Parent 'transform'.  
 * input : Child 'transform' before correction.  
 * output : Child 'transform' after correction.   
-  -> For more information, please check [this explanation](https://twitter.com/akasaki1211/status/1489478989039108099).  
+  > For more information on parent, input and output, please click [here](https://twitter.com/akasaki1211/status/1489478989039108099).  
 * controller : Any node to add attributes for control.  
 * colliders : Name array of colliders created.
 * groundCol : Add horizontal plane collision. (*optional)
