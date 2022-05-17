@@ -22,14 +22,8 @@ def create(parent, input, output, controller, colliders=[], groundCol=False, *ar
     
     controllerAttr(controller, groundCol)
 
-    #parent_dm = cmds.createNode('decomposeMatrix')
-    #cmds.connectAttr(parent + ".worldMatrix[0]", parent_dm + ".inputMatrix", f=True)
     parent_dm = createDecomposeMatrix(parent)
-    
-    #input_dm = cmds.createNode('decomposeMatrix')
-    #cmds.connectAttr(input + ".worldMatrix[0]", input_dm + ".inputMatrix", f=True)
     input_dm = createDecomposeMatrix(input)
-
     output_vp = cmds.createNode('vectorProduct')
     cmds.setAttr(output_vp + '.operation', 4)
     cmds.setAttr(output_vp + '.normalizeOutput', 0)
@@ -106,8 +100,6 @@ def setupCollision(col, index, colliderType, *args):
     detectionStr = "\t//{}\n".format(col)
 
     if colliderType == 'sphere':
-        #dm = cmds.createNode('decomposeMatrix')
-        #cmds.connectAttr(col + ".worldMatrix[0]", dm + ".inputMatrix", f=True)
         dm = createDecomposeMatrix(col)
 
         defineStr += "vector $c{0} = <<{1}.outputTranslateX, {1}.outputTranslateY, {1}.outputTranslateZ>>;\n".format(index, dm)
@@ -119,8 +111,6 @@ def setupCollision(col, index, colliderType, *args):
         detectionStr += "\t}\n\n"
 
     elif colliderType == 'infinitePlane':
-        #dm = cmds.createNode('decomposeMatrix')
-        #cmds.connectAttr(col + ".worldMatrix[0]", dm + ".inputMatrix", f=True)
         dm = createDecomposeMatrix(col)
         vp = cmds.ls(cmds.listConnections(col + ".worldMatrix[0]", s=False), type='vectorProduct')
         if vp:
@@ -146,10 +136,6 @@ def setupCollision(col, index, colliderType, *args):
     elif colliderType == 'capsule':
         a = cmds.listConnections(col + '.sphereA', d=0)[0]
         b = cmds.listConnections(col + '.sphereB', d=0)[0]
-        #dmA = cmds.createNode('decomposeMatrix')
-        #dmB = cmds.createNode('decomposeMatrix')
-        #cmds.connectAttr(a + ".worldMatrix[0]", dmA + ".inputMatrix", f=True)
-        #mds.connectAttr(b + ".worldMatrix[0]", dmB + ".inputMatrix", f=True)
         dmA = createDecomposeMatrix(a)
         dmB = createDecomposeMatrix(b)
 
@@ -180,10 +166,6 @@ def setupCollision(col, index, colliderType, *args):
     elif colliderType == 'capsule2':
         a = cmds.listConnections(col + '.sphereA', d=0)[0]
         b = cmds.listConnections(col + '.sphereB', d=0)[0]
-        #dmA = cmds.createNode('decomposeMatrix')
-        #dmB = cmds.createNode('decomposeMatrix')
-        #cmds.connectAttr(a + ".worldMatrix[0]", dmA + ".inputMatrix", f=True)
-        #cmds.connectAttr(b + ".worldMatrix[0]", dmB + ".inputMatrix", f=True)
         dmA = createDecomposeMatrix(a)
         dmB = createDecomposeMatrix(b)
 
