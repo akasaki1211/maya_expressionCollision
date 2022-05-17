@@ -20,13 +20,13 @@ It is created only with expression node of Maya standard function. No plug-in no
 
 # Installation
 Please do one of the following:
-* Copy the expCol folder into the `C:\Users\<username>\Documents\maya\scripts`.
+* Copy the expCol directory into the `C:\Users\<username>\Documents\maya\scripts`.
 * Add the parent directory of expCol to PYTHONPATH environment variable.
 * Add the parent directory of expCol to PYTHONPATH in Maya.env.
 
 # Usage
 ## Create Collider
-```
+```python
 from expCol import collider
 
 collider.iplane()
@@ -36,13 +36,10 @@ collider.capsule2()
 ```
 
 ## Create Detection
-```
+```python
 from expCol import detection
 
-detection.create('parent', 'input', 'output', 
-                'controller', 
-                colliders=collider_list, 
-                groundCol=True)
+detection.create('parent', 'input', 'output', 'controller', colliders=collider_list, groundCol=True)
 ```
 * parent : Parent 'transform'.  
 * input : Child 'transform' before correction.  
@@ -54,7 +51,7 @@ detection.create('parent', 'input', 'output',
 
 
 ## Example
-```
+```python
 import maya.cmds as cmds
 from expCol import collider, detection
 
