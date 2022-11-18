@@ -40,7 +40,9 @@ collider.capsule2()
 ```python
 from expCol import detection
 
-detection.create('parent', 'input', 'output', 'controller', colliders=collider_list, groundCol=True, scalable=False)
+detection.create('parent', 'input', 'output', 'controller', 
+                  colliders=collider_list, 
+                  groundCol=True, scalable=False)
 ```
 * parent : Parent 'transform'.  
 * input : Child 'transform' before correction.  
