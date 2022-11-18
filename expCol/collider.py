@@ -192,8 +192,8 @@ def addCommonAttr(obj, colliderType, *args):
         cmds.addAttr(obj, ln=arg, at="message")
 
 def lockHideAttr(obj, attr, *args):
-    if type(attr) is str:
-        if attr is 'all':
+    if type(attr) == str:
+        if attr == 'all':
             for at1 in 'trs':
                 for at2 in 'xyz':
                     cmds.setAttr('{}.{}{}'.format(obj,at1,at2), l=True, k=False, cb=False)

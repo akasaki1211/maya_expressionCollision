@@ -15,7 +15,7 @@ def undoWrapper(function):
     return wrapper
 
 @undoWrapper
-def create(parent, input, output, controller, colliders=[], groundCol=False, *args):
+def create(parent, input, output, controller, colliders=[], groundCol=False, scalable=False, *args):
     
     if not parent or not input or not output or not controller:
         return
@@ -35,28 +35,38 @@ def create(parent, input, output, controller, colliders=[], groundCol=False, *ar
     p_radius = cmds.rename(p_radius, '{}_radius'.format(output))
     p_radius_shape = cmds.listRelatives(p_radius, s=True)[0]
     cmds.parent(p_radius, output, r=True)
-    for at1 in 'trs':
+    for at1 in 'tr':
         for at2 in 'xyz':
             cmds.setAttr('{}.{}{}'.format(p_radius,at1,at2), l=True, k=False, cb=False)
+    if not scalable:
+        cmds.connectAttr(controller + '.radius', p_radius_shape + '.radius', f=True)
+        for xyz in 'xyz':
+            cmds.setAttr('{}.s{}'.format(p_radius,xyz), l=True, k=False, cb=False)
     cmds.setAttr(p_radius_shape + '.overrideEnabled', 1)
     cmds.setAttr(p_radius_shape + '.overrideDisplayType', 2)
-    cmds.connectAttr(controller + '.radius', p_radius_shape + '.radius', f=True)
+    
 
     colliderExpStr = []
     for j, col in enumerate(colliders):
         if cmds.objExists(col):
-            defineStr, detectionStr = setupCollision(col, j, cmds.getAttr(col + '.colliderType'))
+            defineStr, detectionStr = setupCollision(col, j, cmds.getAttr(col + '.colliderType'), scalable=scalable)
             colliderExpStr.append([defineStr, detectionStr])
 
     # expression string
     expStr = "vector $p0 = <<{0}.outputTranslateX, {0}.outputTranslateY, {0}.outputTranslateZ>>;\n\n".format(parent_dm)
     expStr += "vector $p = <<{0}.outputTranslateX, {0}.outputTranslateY, {0}.outputTranslateZ>>;\n".format(input_dm)
-    expStr += "float $p_radius = {0}.radius;\n".format(controller)
-    vec = []
-    vec.append(cmds.getAttr(input_dm + '.outputTranslateX') - cmds.getAttr(parent_dm + '.outputTranslateX'))
-    vec.append(cmds.getAttr(input_dm + '.outputTranslateY') - cmds.getAttr(parent_dm + '.outputTranslateY'))
-    vec.append(cmds.getAttr(input_dm + '.outputTranslateZ') - cmds.getAttr(parent_dm + '.outputTranslateZ'))
-    expStr += "float $d = {};\n\n".format(math.sqrt(vec[0]**2 + vec[1]**2 + vec[2]**2))
+
+    if scalable:
+        expStr += "float $p_scaleFactor = abs({0}.outputScaleZ);\n".format(parent_dm)
+        expStr += "float $p_radius = {0}.radius * $p_scaleFactor;\n".format(controller)
+        expStr += "float $d = mag($p - $p0);\n\n"
+    else:
+        expStr += "float $p_radius = {0}.radius;\n".format(controller)
+        vec = []
+        vec.append(cmds.getAttr(input_dm + '.outputTranslateX') - cmds.getAttr(parent_dm + '.outputTranslateX'))
+        vec.append(cmds.getAttr(input_dm + '.outputTranslateY') - cmds.getAttr(parent_dm + '.outputTranslateY'))
+        vec.append(cmds.getAttr(input_dm + '.outputTranslateZ') - cmds.getAttr(parent_dm + '.outputTranslateZ'))
+        expStr += "float $d = {};\n\n".format(math.sqrt(vec[0]**2 + vec[1]**2 + vec[2]**2))
     
     # collider define
     for cs in colliderExpStr:
@@ -91,11 +101,16 @@ def create(parent, input, output, controller, colliders=[], groundCol=False, *ar
     expStr += "{}.input1X = $p.x;\n".format(output_vp)
     expStr += "{}.input1Y = $p.y;\n".format(output_vp)
     expStr += "{}.input1Z = $p.z;\n".format(output_vp)
+
+    if scalable:
+        expStr += "{}.scaleX = $p_radius / $p_scaleFactor;\n".format(p_radius)
+        expStr += "{}.scaleY = $p_radius / $p_scaleFactor;\n".format(p_radius)
+        expStr += "{}.scaleZ = $p_radius / $p_scaleFactor;\n".format(p_radius)
     
     # create expression
     cmds.expression(s=expStr, name='{}_expCol'.format(input), alwaysEvaluate=False)
 
-def setupCollision(col, index, colliderType, *args):
+def setupCollision(col, index, colliderType, scalable=False, *args):
     defineStr = "//{}\n".format(col)
     detectionStr = "\t//{}\n".format(col)
 
@@ -103,7 +118,11 @@ def setupCollision(col, index, colliderType, *args):
         dm = createDecomposeMatrix(col)
 
         defineStr += "vector $c{0} = <<{1}.outputTranslateX, {1}.outputTranslateY, {1}.outputTranslateZ>>;\n".format(index, dm)
-        defineStr += "float $c{0}_radius = {1}.radius;\n\n".format(index, col)
+        if scalable:
+            defineStr += "float $c{0}_scaleFactor = {1}.outputScaleZ;\n".format(index, dm)
+            defineStr += "float $c{0}_radius = {1}.radius * $c{0}_scaleFactor;\n\n".format(index, col)
+        else:
+            defineStr += "float $c{0}_radius = {1}.radius;\n\n".format(index, col)
 
         detectionStr += "\tif (($c{0}_radius + $p_radius) > mag($p - $c{0}))\n".format(index)
         detectionStr += "\t{\n"
@@ -141,7 +160,11 @@ def setupCollision(col, index, colliderType, *args):
 
         defineStr += "vector $c{0}a = <<{1}.outputTranslateX, {1}.outputTranslateY, {1}.outputTranslateZ>>;\n".format(index, dmA)
         defineStr += "vector $c{0}b = <<{1}.outputTranslateX, {1}.outputTranslateY, {1}.outputTranslateZ>>;\n".format(index, dmB)
-        defineStr += "float $c{0}_radius = {1}.radius;\n".format(index, col)
+        if scalable:
+            defineStr += "float $c{0}_scaleFactor = {1}.outputScaleZ;\n".format(index, dmA)
+            defineStr += "float $c{0}_radius = {1}.radius * $c{0}_scaleFactor;\n".format(index, col)
+        else:
+            defineStr += "float $c{0}_radius = {1}.radius;\n".format(index, col)
         defineStr += "float $c{0}_height = mag($c{0}b-$c{0}a);\n".format(index)
         defineStr += "vector $c{0}ab = unit($c{0}b-$c{0}a);\n\n".format(index)
 
@@ -171,8 +194,13 @@ def setupCollision(col, index, colliderType, *args):
 
         defineStr += "vector $c{0}a = <<{1}.outputTranslateX, {1}.outputTranslateY, {1}.outputTranslateZ>>;\n".format(index, dmA)
         defineStr += "vector $c{0}b = <<{1}.outputTranslateX, {1}.outputTranslateY, {1}.outputTranslateZ>>;\n".format(index, dmB)
-        defineStr += "float $c{0}a_radius = {1}.radiusA;\n".format(index, col)
-        defineStr += "float $c{0}b_radius = {1}.radiusB;\n".format(index, col)
+        if scalable:
+            defineStr += "float $c{0}_scaleFactor = {1}.outputScaleZ;\n".format(index, dmA)
+            defineStr += "float $c{0}a_radius = {1}.radiusA * $c{0}_scaleFactor;\n".format(index, col)
+            defineStr += "float $c{0}b_radius = {1}.radiusB * $c{0}_scaleFactor;\n".format(index, col)
+        else:
+            defineStr += "float $c{0}a_radius = {1}.radiusA;\n".format(index, col)
+            defineStr += "float $c{0}b_radius = {1}.radiusB;\n".format(index, col)
         defineStr += "float $c{0}_height = mag($c{0}b-$c{0}a);\n".format(index)
         defineStr += "vector $c{0}ab = unit($c{0}b-$c{0}a);\n\n".format(index)
 

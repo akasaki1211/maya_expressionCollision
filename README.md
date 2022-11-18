@@ -4,8 +4,9 @@ Create collision detection using expression node.
 It is created only with expression node of Maya standard function. No plug-in node or other installation is required.
 
 **Tested with :**
-* Maya 2020 (Python2.7)  
-* Maya 2022 (Python3.7)  
+* Maya 2020 (Python2.7.11)  
+* Maya 2022 (Python3.7.7)  
+* Maya 2023 (Python3.9.7)  
 * Maya 2019 and below are not supported
 
 **Example of capsule collider :**
@@ -39,7 +40,7 @@ collider.capsule2()
 ```python
 from expCol import detection
 
-detection.create('parent', 'input', 'output', 'controller', colliders=collider_list, groundCol=True)
+detection.create('parent', 'input', 'output', 'controller', colliders=collider_list, groundCol=True, scalable=False)
 ```
 * parent : Parent 'transform'.  
 * input : Child 'transform' before correction.  
@@ -48,6 +49,7 @@ detection.create('parent', 'input', 'output', 'controller', colliders=collider_l
 * controller : Any node to add attributes for control.  
 * colliders : Name array of colliders created.
 * groundCol : Add horizontal plane collision. (*optional)
+* scalable : Allow for parent scale of joint-chain and parent scale of colliders. (*optional)
 
 
 ## Example
@@ -88,10 +90,10 @@ for i in range(len(jointList)-1):
                     'output_{}'.format(i), 
                     'rootCtl', 
                     colliders=collider_list, 
-                    groundCol=True)
+                    groundCol=True, 
+                    scalable=True)
 ```
 
 # Note
 * A large number of detections can be very heavy.
 * The number of colliders cannot be changed after a detection (expression node) is created.
-* Scale is not supported.
