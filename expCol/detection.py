@@ -2,15 +2,39 @@
 import maya.cmds as cmds
 import math
 
-from .utils import undoWrapper, createDecomposeMatrix
+from .utils import undoWrapper, lockHideAttr, createDecomposeMatrix
 
 @undoWrapper
-def create(parent, input, output, controller, colliders=[], groundCol=False, scalable=False, *args):
+def create(
+        parent, 
+        input, 
+        output, 
+        controller, 
+        colliders=[], 
+        groundCol=False, 
+        scalable=False, 
+        radius_rate=None,
+        *args
+    ):
+    """ create collision detection
+
+    Args:
+        parent (str): parent transform or joint.
+        input (str): input transform or joint.
+        output (str): output transform or joint.
+        controller (str): node to add control attributes.
+        colliders (list, optional): list of colliders. Defaults to [].
+        groundCol (bool, optional): add horizontal plane collision. Defaults to False.
+        scalable (bool, optional): allow for parent scale of joint-chain and parent scale of colliders. Defaults to False.
+        radius_rate (float, optional): rate at which radius and tip radius are interpolated, between 0 and 1. Defaults to None.
+    """
     
     if not parent or not input or not output or not controller:
         return
     
-    controllerAttr(controller, groundCol)
+    use_tip_radius = not radius_rate is None
+
+    controllerAttr(controller, groundCol, use_tip_radius)
 
     parent_dm = createDecomposeMatrix(parent)
     input_dm = createDecomposeMatrix(input)
@@ -25,13 +49,7 @@ def create(parent, input, output, controller, colliders=[], groundCol=False, sca
     p_radius = cmds.rename(p_radius, '{}_radius'.format(output))
     p_radius_shape = cmds.listRelatives(p_radius, s=True)[0]
     cmds.parent(p_radius, output, r=True)
-    for at1 in 'tr':
-        for at2 in 'xyz':
-            cmds.setAttr('{}.{}{}'.format(p_radius,at1,at2), l=True, k=False, cb=False)
-    if not scalable:
-        cmds.connectAttr(controller + '.radius', p_radius_shape + '.radius', f=True)
-        for xyz in 'xyz':
-            cmds.setAttr('{}.s{}'.format(p_radius,xyz), l=True, k=False, cb=False)
+    lockHideAttr(p_radius, ['tx','ty','tz','rx','ry','rz'])
     cmds.setAttr(p_radius_shape + '.overrideEnabled', 1)
     cmds.setAttr(p_radius_shape + '.overrideDisplayType', 2)
     
@@ -48,10 +66,26 @@ def create(parent, input, output, controller, colliders=[], groundCol=False, sca
 
     if scalable:
         expStr += "float $p_scaleFactor = abs({0}.outputScaleZ);\n".format(parent_dm)
-        expStr += "float $p_radius = {0}.radius * $p_scaleFactor;\n".format(controller)
+        if use_tip_radius:
+            if radius_rate == 0.0:
+                expStr += "float $p_radius = {0}.radius * $p_scaleFactor;\n".format(controller)
+            elif radius_rate == 1.0:
+                expStr += "float $p_radius = {0}.tipRadius * $p_scaleFactor;\n".format(controller)
+            else:
+                expStr += "float $p_radius = ({0}.radius*{1} + {0}.tipRadius*{2}) * $p_scaleFactor;\n".format(controller, 1.0-radius_rate, radius_rate)
+        else:
+            expStr += "float $p_radius = {0}.radius * $p_scaleFactor;\n".format(controller)
         expStr += "float $d = mag($p - $p0);\n\n"
     else:
-        expStr += "float $p_radius = {0}.radius;\n".format(controller)
+        if use_tip_radius:
+            if radius_rate == 0.0:
+                expStr += "float $p_radius = {0}.radius;\n".format(controller)
+            elif radius_rate == 1.0:
+                expStr += "float $p_radius = {0}.tipRadius;\n".format(controller)
+            else:
+                expStr += "float $p_radius = {0}.radius*{1} + {0}.tipRadius*{2};\n".format(controller, 1.0-radius_rate, radius_rate)
+        else:
+            expStr += "float $p_radius = {0}.radius;\n".format(controller)
         vec = []
         vec.append(cmds.getAttr(input_dm + '.outputTranslateX') - cmds.getAttr(parent_dm + '.outputTranslateX'))
         vec.append(cmds.getAttr(input_dm + '.outputTranslateY') - cmds.getAttr(parent_dm + '.outputTranslateY'))
@@ -96,6 +130,10 @@ def create(parent, input, output, controller, colliders=[], groundCol=False, sca
         expStr += "{}.scaleX = $p_radius / $p_scaleFactor;\n".format(p_radius)
         expStr += "{}.scaleY = $p_radius / $p_scaleFactor;\n".format(p_radius)
         expStr += "{}.scaleZ = $p_radius / $p_scaleFactor;\n".format(p_radius)
+    else:
+        expStr += "{}.scaleX = $p_radius;\n".format(p_radius)
+        expStr += "{}.scaleY = $p_radius;\n".format(p_radius)
+        expStr += "{}.scaleZ = $p_radius;\n".format(p_radius)
     
     # create expression
     cmds.expression(s=expStr, name='{}_expCol'.format(input), alwaysEvaluate=False)
@@ -216,13 +254,16 @@ def setupCollision(col, index, colliderType, scalable=False, *args):
 
     return defineStr, detectionStr
 
-def controllerAttr(ctrl, groundCol=False, *args):
+def controllerAttr(ctrl, groundCol=False, tip_radius=False, *args):
     if not cmds.attributeQuery('collision', node=ctrl, ex=True):
         cmds.addAttr(ctrl, ln='collision', nn='__________', at='enum', en='Collision', k=True)
     if not cmds.attributeQuery('colIteration', node=ctrl, ex=True):
         cmds.addAttr(ctrl, ln="colIteration", nn='Colision Iteration', at='long', min=0, dv=3, k=True)
     if not cmds.attributeQuery('radius', node=ctrl, ex=True):
         cmds.addAttr(ctrl, ln="radius", nn='Radius', at='double', min=0, dv=1, k=True)
+    if tip_radius:
+        if not cmds.attributeQuery('tipRadius', node=ctrl, ex=True):
+            cmds.addAttr(ctrl, ln="tipRadius", nn='Tip Radius', at='double', min=0, dv=1, k=True)
     if groundCol:
         if not cmds.attributeQuery('groundHeight', node=ctrl, ex=True):
             cmds.addAttr(ctrl, ln="groundHeight", nn='GroundHeight', at='double', dv=0, k=True)
