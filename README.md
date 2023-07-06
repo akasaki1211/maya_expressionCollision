@@ -4,6 +4,7 @@ Create collision detection using expression node.
 It is created only with expression node of Maya standard function. No plug-in node or other installation is required.
 
 **Tested with :**
+* Maya 2024 (Python3.10.8)  
 * Maya 2023 (Python3.9.7)  
 * Maya 2022 (Python3.7.7)  
 * Maya 2020 (Python2.7.11)  
