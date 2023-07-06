@@ -2,17 +2,7 @@
 import maya.cmds as cmds
 import math
 
-def undoWrapper(function):
-    """
-        undo wrapper (used in decorator)
-    """
-    def wrapper(*args, **kwargs):
-        cmds.undoInfo(ock=True)
-        result = function(*args, **kwargs)
-        cmds.undoInfo(cck=True)
-        return result
-
-    return wrapper
+from .utils import undoWrapper, createDecomposeMatrix
 
 @undoWrapper
 def create(parent, input, output, controller, colliders=[], groundCol=False, scalable=False, *args):
@@ -236,13 +226,3 @@ def controllerAttr(ctrl, groundCol=False, *args):
     if groundCol:
         if not cmds.attributeQuery('groundHeight', node=ctrl, ex=True):
             cmds.addAttr(ctrl, ln="groundHeight", nn='GroundHeight', at='double', dv=0, k=True)
-
-def createDecomposeMatrix(node, *args):
-    dm = cmds.ls(cmds.listConnections(node + '.worldMatrix[0]', s=False), type='decomposeMatrix')
-    if dm:
-        dm = dm[0]
-    else:
-        dm = cmds.createNode('decomposeMatrix')
-        cmds.connectAttr(node + ".worldMatrix[0]", dm + ".inputMatrix", f=True)
-
-    return dm

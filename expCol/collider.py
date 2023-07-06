@@ -1,17 +1,14 @@
 # -*- coding: utf-8 -*-
 import maya.cmds as cmds
 
-def undoWrapper(function):
-    """
-        undo wrapper (used in decorator)
-    """
-    def wrapper(*args, **kwargs):
-        cmds.undoInfo(ock=True)
-        result = function(*args, **kwargs)
-        cmds.undoInfo(cck=True)
-        return result
-
-    return wrapper
+from .utils import (
+    undoWrapper,
+    getUniqueName,
+    lockHideAttr,
+    disableRenderStats,
+    setOverrideColor,
+    setOutlinerColor
+)
 
 @undoWrapper
 def iplane(*args):
@@ -173,52 +170,9 @@ def capsule2(*args):
 
     return root
 
-def getUniqueName(n, *args):
-    flag = True
-    i = 1
-    while flag:
-        if cmds.objExists('{}{}'.format(n,i)):
-            i += 1
-        else:
-            flag = False
-
-    return '{}{}'.format(n,i)
-
 def addCommonAttr(obj, colliderType, *args):
     cmds.addAttr(obj, ln='colliderType', nn='Collider Type', dt='string', k=False)
     cmds.setAttr(obj + '.colliderType', colliderType, type='string')
     cmds.addAttr(obj, ln='displayType', nn='Display Type', at='enum', en='Normal:Template:Reference', dv=0, k=True)
     for arg in args:
         cmds.addAttr(obj, ln=arg, at="message")
-
-def lockHideAttr(obj, attr, *args):
-    if type(attr) == str:
-        if attr == 'all':
-            for at1 in 'trs':
-                for at2 in 'xyz':
-                    cmds.setAttr('{}.{}{}'.format(obj,at1,at2), l=True, k=False, cb=False)
-            cmds.setAttr('{}.v'.format(obj), l=True, k=False, cb=False)
-    else:
-        for at in attr:
-            cmds.setAttr('{}.{}'.format(obj,at), l=True, k=False, cb=False)
-
-def disableRenderStats(obj, *args):
-    sh = cmds.listRelatives(obj, s=True)[0]
-    cmds.setAttr(sh + '.castsShadows', 0)
-    cmds.setAttr(sh + '.receiveShadows', 0)
-    cmds.setAttr(sh + '.holdOut', 0)
-    cmds.setAttr(sh + '.motionBlur', 0)
-    cmds.setAttr(sh + '.primaryVisibility', 0)
-    cmds.setAttr(sh + '.smoothShading', 0)
-    cmds.setAttr(sh + '.visibleInReflections', 0)
-    cmds.setAttr(sh + '.visibleInRefractions', 0)
-    cmds.setAttr(sh + '.doubleSided', 0)
-
-def setOverrideColor(obj, colIdx, *args):
-    cmds.setAttr(obj + '.overrideEnabled', True)
-    cmds.setAttr(obj + '.overrideRGBColors', False)
-    cmds.setAttr(obj + '.overrideColor', colIdx)
-
-def setOutlinerColor(obj, col=[0,0,0], *args):
-    cmds.setAttr(obj + '.useOutlinerColor', True)
-    cmds.setAttr(obj + '.outlinerColor', col[0], col[1], col[2])
