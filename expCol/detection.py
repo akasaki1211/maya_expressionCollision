@@ -2,7 +2,11 @@
 import maya.cmds as cmds
 import math
 
-from .utils import undoWrapper, lockHideAttr, createDecomposeMatrix
+from .utils import (
+    undoWrapper, 
+    lockHideAttr, 
+    createDecomposeMatrix
+)
 
 @undoWrapper
 def create(
@@ -34,7 +38,7 @@ def create(
     
     use_tip_radius = not radius_rate is None
 
-    controllerAttr(controller, groundCol, use_tip_radius)
+    add_control_attr(controller, groundCol, use_tip_radius)
 
     parent_dm = createDecomposeMatrix(parent)
     input_dm = createDecomposeMatrix(input)
@@ -254,7 +258,8 @@ def setupCollision(col, index, colliderType, scalable=False, *args):
 
     return defineStr, detectionStr
 
-def controllerAttr(ctrl, groundCol=False, tip_radius=False, *args):
+@undoWrapper
+def add_control_attr(ctrl, groundCol=False, tip_radius=False, *args):
     if not cmds.attributeQuery('collision', node=ctrl, ex=True):
         cmds.addAttr(ctrl, ln='collision', nn='__________', at='enum', en='Collision', k=True)
     if not cmds.attributeQuery('colIteration', node=ctrl, ex=True):
