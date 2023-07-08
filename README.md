@@ -31,10 +31,10 @@ Please do one of the following:
 ```python
 from expCol import collider
 
-collider.iplane()
-collider.sphere()
-collider.capsule()
-collider.capsule2()
+collider.iplane()   # Infinite Plane
+collider.sphere()   # Sphere
+collider.capsule()  # Capsule
+collider.capsule2() # Capsule2 (radius individually)
 ```
 
 ## Create Detection
@@ -52,23 +52,31 @@ detection.create(
     radius_rate=None,
 )
 ```
-* parent : Parent 'transform'.  
-* input : Child 'transform' before correction.  
-* output : Child 'transform' after correction.   
+* `parent` (str): Parent 'transform' or 'joint'.  
+* `input` (str): Child 'transform' or 'joint' before correction.  
+* `output` (str): Child 'transform' or 'joint' after correction.   
   > For more information on parent, input and output, please click [here](https://twitter.com/akasaki1211/status/1489478989039108099).  
-* controller : Any node to add attributes for control.  
-* colliders : List of collider names.
-* groundCol : Add horizontal plane collision. (*optional)
-* scalable : Allow for parent scale of joint-chain and parent scale of colliders. (*optional)
-* radius_rate : Rate at which radius and tip radius are interpolated, between 0 and 1.
+* `controller` (str): Any node to add attributes for control.  
+* `colliders` (list, optional): List of collider names. Defaults to [].
+* `groundCol` (bool, optional): Add horizontal plane collision. Defaults to False.
+* `scalable` (bool, optional): Allow for parent scale of joint-chain and parent scale of colliders. Defaults to False.
+* `radius_rate` (float, optional): Rate at which radius and tip radius are interpolated, between 0 and 1. Defaults to None.
 
+If you just want to add an attribute to a controller, do the following. It is also called in `detection.create`.  
+```python
+detection.add_control_attr(
+    'controller', 
+    groundCol=True, 
+    tip_radius=True
+)
+```
 
 ## Example
 ```python
-import maya.cmds as cmds
+from maya import cmds
 from expCol import collider, detection
 
-# sample joint chain
+# Create sample joint chain
 rootCtl = cmds.createNode('transform', n='rootCtl')
 jointList = []
 for i in range(5):
@@ -82,9 +90,9 @@ for i in range(len(jointList)-1):
     prt = cmds.createNode('transform', n='parent_{}'.format(i), p=p)
     ipt = cmds.createNode('transform', n='input_{}'.format(i), p=p)
     out = cmds.createNode('transform', n='output_{}'.format(i), p=p)
-    cmds.xform(prt, ws=1, t=pos1)
-    cmds.xform(ipt, ws=1, t=pos2)
-    cmds.xform(out, ws=1, t=pos2)
+    cmds.xform(prt, ws=True, t=pos1)
+    cmds.xform(ipt, ws=True, t=pos2)
+    cmds.xform(out, ws=True, t=pos2)
     cmds.aimConstraint(out, jointList[i], u=[0,0,1], wu=[0,0,1], wut='objectrotation', wuo=prt)
 
 # Create Colliders
@@ -106,6 +114,21 @@ for i in range(len(jointList)-1):
     )
 ```
 
+### `groundCol` option
+Setting groundCol to True adds an invisible horizontal collision. The height can be changed with the GroundHeight value.  
+![use_groundCol.gif](images/use_groundCol.gif)
+
+### `scalable` option
+If scalable is set to True, the scale of the parent of the joint-chain or the parent of the collider is reflected.  
+|scalable=True|scalable=False|
+|---|---|
+|![scalable_true.gif](images/scalable_true.gif)|![scalable_false.gif](images/scalable_false.gif)|
+
+### `radius_rate` option
+Interpolate radius and tip_radius by the radius_rate value. 0.0 matches radius and 1.0 matches tip_radius.  
+![radius_rate.png](images/radius_rate.png)
+
 # Note
+* A high `Colision Iteration` value increases the accuracy of collision detection, but it also increases the processing load.
 * A large number of detections can be very heavy.
 * The number of colliders cannot be changed after a detection (expression node) is created.
