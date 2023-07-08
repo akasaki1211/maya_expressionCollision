@@ -55,12 +55,14 @@ detection.create(
 * `parent` (str): Parent 'transform' or 'joint'.  
 * `input` (str): Child 'transform' or 'joint' before correction.  
 * `output` (str): Child 'transform' or 'joint' after correction.   
-  > For more information on parent, input and output, please click [here](https://twitter.com/akasaki1211/status/1489478989039108099).  
 * `controller` (str): Any node to add attributes for control.  
 * `colliders` (list, optional): List of collider names. Defaults to [].
 * `groundCol` (bool, optional): Add horizontal plane collision. Defaults to False.
 * `scalable` (bool, optional): Allow for parent scale of joint-chain and parent scale of colliders. Defaults to False.
-* `radius_rate` (float, optional): Rate at which radius and tip radius are interpolated, between 0 and 1. Defaults to None.
+* `radius_rate` (float, optional): Rate at which radius and tip radius are interpolated, between 0 and 1. Defaults to None.  
+
+> **Note**  
+> For more information on `parent`, `input` and `output`, please click [here](explanation_of_parent_input_output.md).  
 
 If you just want to add an attribute to a controller, do the following. It is also called in `detection.create`.  
 ```python
