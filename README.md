@@ -1,7 +1,7 @@
 # Overview
 Create collision detection using expression node.
 
-It is created only with expression node of Maya standard function. No plug-in node or other installation is required.
+It is created only with expression node of Maya standard function. No plug-in node or other installation is required.  
 
 **Tested with :**
 * Maya 2024 (Python3.10.8)  
@@ -25,6 +25,9 @@ Please do one of the following:
 * Copy the expCol directory into the `C:\Users\<username>\Documents\maya\scripts`.
 * Add the parent directory of expCol to PYTHONPATH environment variable.
 * Add the parent directory of expCol to PYTHONPATH in Maya.env.
+
+> **Note**  
+> `expCol` module is required on rigging, but is not needed on animation.
 
 # Usage
 ## Create Collider
@@ -62,7 +65,7 @@ detection.create(
 * `radius_rate` (float, optional): Rate at which radius and tip radius are interpolated, between 0 and 1. Defaults to None.  
 
 > **Note**  
-> For more information on `parent`, `input` and `output`, please click [here](explanation_of_parent_input_output.md).  
+> For more information on `parent`, `input` and `output`, please click [here](#what-are-parent-input-and-output).  
 
 If you just want to add an attribute to a controller, do the following. It is also called in `detection.create`.  
 ```python
@@ -74,6 +77,7 @@ detection.add_control_attr(
 ```
 
 ## Example
+Running the following code will create a sample joint, create a collider, and even create a detection.  
 ```python
 from maya import cmds
 from expCol import collider, detection
@@ -116,19 +120,37 @@ for i in range(len(jointList)-1):
     )
 ```
 
-### `groundCol` option
+## `groundCol` option
 Setting groundCol to True adds an invisible horizontal collision. The height can be changed with the GroundHeight value.  
 ![use_groundCol.gif](images/use_groundCol.gif)
 
-### `scalable` option
+## `scalable` option
 If scalable is set to True, the scale of the parent of the joint-chain or the parent of the collider is reflected.  
 |scalable=True|scalable=False|
 |---|---|
 |![scalable_true.gif](images/scalable_true.gif)|![scalable_false.gif](images/scalable_false.gif)|
 
-### `radius_rate` option
+## `radius_rate` option
 Interpolate radius and tip_radius by the radius_rate value. 0.0 matches radius and 1.0 matches tip_radius.  
 ![radius_rate.png](images/radius_rate.png)
+
+# What are Parent, Input, and Output?
+
+|||
+|---|---|
+|Parent|world position of the parent joint.|
+|Input|world position of the child joint before correction.|
+|Output|world position of the child joint after correction.|
+
+Each is just transform node, and there is no input connection to translate of Parent and Input.
+![ex_01.gif](images/explanation_of_parent_input_output/ex_01.gif)
+
+Also, joint chain is not directly related to collision. It will be controlled by aim constraint or IK later.
+![ex_02.png](images/explanation_of_parent_input_output/ex_02.png)
+
+If you have more than two joint chain, create the same node graph in the child hierarchy.  
+It's the same for all patterns like Capsule, Infinite plane, Sphere...
+![ex_03.gif](images/explanation_of_parent_input_output/ex_03.gif)
 
 # Note
 * A high `Colision Iteration` value increases the accuracy of collision detection, but it also increases the processing load.
