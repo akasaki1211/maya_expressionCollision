@@ -65,3 +65,13 @@ def createDecomposeMatrix(node, *args):
         cmds.connectAttr(node + ".worldMatrix[0]", dm + ".inputMatrix", f=True)
 
     return dm
+
+def createUnitVector(node, vec=[1,0,0], *args):
+    vp = cmds.createNode('vectorProduct')
+    cmds.setAttr(vp + '.operation', 3)
+    cmds.setAttr(vp + '.input1X', vec[0])
+    cmds.setAttr(vp + '.input1Y', vec[1])
+    cmds.setAttr(vp + '.input1Z', vec[2])
+    cmds.setAttr(vp + '.normalizeOutput', 1)
+    cmds.connectAttr(node + ".worldMatrix[0]", vp + ".matrix", f=True)
+    return vp

@@ -5,7 +5,8 @@ import math
 from .utils import (
     undoWrapper, 
     lockHideAttr, 
-    createDecomposeMatrix
+    createDecomposeMatrix,
+    createUnitVector
 )
 
 @undoWrapper
@@ -167,13 +168,7 @@ def setupCollision(col, index, colliderType, scalable=False, *args):
         if vp:
             vp = vp[0]
         else:
-            vp = cmds.createNode('vectorProduct')
-            cmds.setAttr(vp + '.operation', 3)
-            cmds.setAttr(vp + '.input1X', 0)
-            cmds.setAttr(vp + '.input1Y', 1)
-            cmds.setAttr(vp + '.input1Z', 0)
-            cmds.setAttr(vp + '.normalizeOutput', 1)
-            cmds.connectAttr(col + ".worldMatrix[0]", vp + ".matrix", f=True)
+            vp = createUnitVector(col, vec=[0,1,0])
 
         defineStr += "vector $c{0} = <<{1}.outputTranslateX, {1}.outputTranslateY, {1}.outputTranslateZ>>;\n".format(index, dm)
         defineStr += "vector $c{0}_normal = <<{1}.outputX, {1}.outputY, {1}.outputZ>>;\n\n".format(index, vp)
@@ -254,6 +249,73 @@ def setupCollision(col, index, colliderType, scalable=False, *args):
         detectionStr += "\t\tfloat $r = $c{0}a_radius * (1.0 - $ratio{0}) + $c{0}b_radius * $ratio{0};\n".format(index)
         detectionStr += "\t\tif(mag($p-$q) < ($r + $p_radius))\n".format(index)
         detectionStr += "\t\t\t$p = $q + (unit($p-$q) * ($r + $p_radius));\n".format(index)
+        detectionStr += "\t}\n\n"
+    
+    elif colliderType == 'cuboid':
+        dm = createDecomposeMatrix(col)
+        
+        # unit vector
+        vp_x = None
+        vp_y = None
+        vp_z = None
+
+        vp_list = cmds.ls(cmds.listConnections(col + ".worldMatrix[0]", s=False), type='vectorProduct')
+        for vp in vp_list:
+            input1 = cmds.getAttr(vp + '.input1')
+            if input1 == [(1.0, 0.0, 0.0)]:
+                vp_x = vp
+            elif input1 == [(0.0, 1.0, 0.0)]:
+                vp_y = vp
+            elif input1 == [(0.0, 0.0, 1.0)]:
+                vp_z = vp
+
+        if not vp_x:
+            vp_x = createUnitVector(col, vec=[1,0,0])
+        if not vp_y:
+            vp_y = createUnitVector(col, vec=[0,1,0])
+        if not vp_z:
+            vp_z = createUnitVector(col, vec=[0,0,1])
+
+        # define
+        defineStr += "vector $c{0} = <<{1}.outputTranslateX, {1}.outputTranslateY, {1}.outputTranslateZ>>;\n".format(index, dm)
+        defineStr += "vector $c{0}_vx = <<{1}.outputX, {1}.outputY, {1}.outputZ>>;\n".format(index, vp_x)
+        defineStr += "vector $c{0}_vy = <<{1}.outputX, {1}.outputY, {1}.outputZ>>;\n".format(index, vp_y)
+        defineStr += "vector $c{0}_vz = <<{1}.outputX, {1}.outputY, {1}.outputZ>>;\n".format(index, vp_z)
+        if scalable:
+            defineStr += "float $c{0}_scaleFactor = {1}.outputScaleZ;\n".format(index, dm)
+            defineStr += "float $c{0}_w = {1}.width / 2.0 * $c{0}_scaleFactor;\n".format(index, col)
+            defineStr += "float $c{0}_h = {1}.height / 2.0 * $c{0}_scaleFactor;\n".format(index, col)
+            defineStr += "float $c{0}_d = {1}.depth / 2.0 * $c{0}_scaleFactor;\n\n".format(index, col)
+        else:
+            defineStr += "float $c{0}_w = {1}.width / 2.0;\n".format(index, col)
+            defineStr += "float $c{0}_h = {1}.height / 2.0;\n".format(index, col)
+            defineStr += "float $c{0}_d = {1}.depth / 2.0;\n\n".format(index, col)
+
+        defineStr += "vector $c{0}_cp = <<0,0,0>>;\n".format(index)
+        defineStr += "float $c{0}_lx = 0;\n".format(index)
+        defineStr += "float $c{0}_ly = 0;\n".format(index)
+        defineStr += "float $c{0}_lz = 0;\n".format(index)
+        defineStr += "float $c{0}_min_l = 99999;\n".format(index)
+        defineStr += "int $c{0}_hit = 1;\n\n".format(index)
+
+        # detection
+        detectionStr += "\t$c{0}_cp = $p - $c{0};\n".format(index)
+        detectionStr += "\t$c{0}_lx = dot($c{0}_vx, $c{0}_cp);\n".format(index)
+        detectionStr += "\t$c{0}_ly = dot($c{0}_vy, $c{0}_cp);\n".format(index)
+        detectionStr += "\t$c{0}_lz = dot($c{0}_vz, $c{0}_cp);\n".format(index)
+        detectionStr += "\tif ($c{0}_lx != 0){{if (abs(($c{0}_w + $p_radius) / $c{0}_lx) < 1.0) {{$c{0}_hit = 0;}}}}\n".format(index)
+        detectionStr += "\tif ($c{0}_ly != 0){{if (abs(($c{0}_h + $p_radius) / $c{0}_ly) < 1.0) {{$c{0}_hit = 0;}}}}\n".format(index)
+        detectionStr += "\tif ($c{0}_lz != 0){{if (abs(($c{0}_d + $p_radius) / $c{0}_lz) < 1.0) {{$c{0}_hit = 0;}}}}\n".format(index)
+        detectionStr += "\n"
+        detectionStr += "\tif ($c{0}_hit) {{\n".format(index)
+        detectionStr += "\t\tif ($c{0}_lx != 0){{$c{0}_min_l = abs(($c{0}_w + $p_radius) / $c{0}_lx);}}\n".format(index)
+        detectionStr += "\t\tif ($c{0}_ly != 0){{$c{0}_min_l = min($c{0}_min_l, abs(($c{0}_h + $p_radius) / $c{0}_ly));}}\n".format(index)
+        detectionStr += "\t\tif ($c{0}_lz != 0){{$c{0}_min_l = min($c{0}_min_l, abs(($c{0}_d + $p_radius) / $c{0}_lz));}}\n".format(index)
+        detectionStr += "\t\tif ($c{0}_min_l == 99999){{\n".format(index)
+        detectionStr += "\t\t\t$p = $c{0} + <<$c{0}_w + $p_radius, 0, 0>>;\n".format(index)
+        detectionStr += "\t\t} else {\n"
+        detectionStr += "\t\t\t$p = $c{0} + ($c{0}_cp * $c{0}_min_l);\n".format(index)
+        detectionStr += "\t\t}\n"
         detectionStr += "\t}\n\n"
 
     return defineStr, detectionStr
