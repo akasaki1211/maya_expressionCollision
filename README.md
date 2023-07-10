@@ -158,3 +158,17 @@ It's the same for all patterns like Capsule, Infinite plane, Sphere...
 * A high `Colision Iteration` value increases the accuracy of collision detection, but it also increases the processing load.
 * A large number of detections can be very heavy.
 * The number of colliders cannot be changed after a detection (expression node) is created.
+
+## Processing time
+Processing time per joint measured using maya's profiler.  
+|Collider (Iteration:5)|Avg|
+|---|---|
+|sphere|32.57 us|
+|iplane|33.70 us|
+|capsule|39.27 us|
+|capsule2|48.94 us|
+|cuboid|50.30 us|
+
+> * Windows 11  
+> * Intel(R) Core(TM) i7-10700 CPU @ 2.90GHz  
+> * Maya 2024  
