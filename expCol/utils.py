@@ -67,6 +67,11 @@ def createDecomposeMatrix(node, *args):
     return dm
 
 def createUnitVector(node, vec=[1,0,0], *args):
+    vp_list = cmds.ls(cmds.listConnections(node + ".worldMatrix[0]", s=False), type='vectorProduct')
+    for vp in vp_list:
+        if cmds.getAttr(vp + '.input1') == [tuple(vec)]:
+            return vp
+    
     vp = cmds.createNode('vectorProduct')
     cmds.setAttr(vp + '.operation', 3)
     cmds.setAttr(vp + '.input1X', vec[0])

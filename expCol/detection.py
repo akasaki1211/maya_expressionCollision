@@ -164,11 +164,7 @@ def setupCollision(col, index, colliderType, scalable=False, *args):
 
     elif colliderType == 'infinitePlane':
         dm = createDecomposeMatrix(col)
-        vp = cmds.ls(cmds.listConnections(col + ".worldMatrix[0]", s=False), type='vectorProduct')
-        if vp:
-            vp = vp[0]
-        else:
-            vp = createUnitVector(col, vec=[0,1,0])
+        vp = createUnitVector(col, vec=[0,1,0])
 
         defineStr += "vector $c{0} = <<{1}.outputTranslateX, {1}.outputTranslateY, {1}.outputTranslateZ>>;\n".format(index, dm)
         defineStr += "vector $c{0}_normal = <<{1}.outputX, {1}.outputY, {1}.outputZ>>;\n\n".format(index, vp)
@@ -255,26 +251,9 @@ def setupCollision(col, index, colliderType, scalable=False, *args):
         dm = createDecomposeMatrix(col)
         
         # unit vector
-        vp_x = None
-        vp_y = None
-        vp_z = None
-
-        vp_list = cmds.ls(cmds.listConnections(col + ".worldMatrix[0]", s=False), type='vectorProduct')
-        for vp in vp_list:
-            input1 = cmds.getAttr(vp + '.input1')
-            if input1 == [(1.0, 0.0, 0.0)]:
-                vp_x = vp
-            elif input1 == [(0.0, 1.0, 0.0)]:
-                vp_y = vp
-            elif input1 == [(0.0, 0.0, 1.0)]:
-                vp_z = vp
-
-        if not vp_x:
-            vp_x = createUnitVector(col, vec=[1,0,0])
-        if not vp_y:
-            vp_y = createUnitVector(col, vec=[0,1,0])
-        if not vp_z:
-            vp_z = createUnitVector(col, vec=[0,0,1])
+        vp_x = createUnitVector(col, vec=[1,0,0])
+        vp_y = createUnitVector(col, vec=[0,1,0])
+        vp_z = createUnitVector(col, vec=[0,0,1])
 
         # define
         defineStr += "vector $c{0} = <<{1}.outputTranslateX, {1}.outputTranslateY, {1}.outputTranslateZ>>;\n".format(index, dm)
