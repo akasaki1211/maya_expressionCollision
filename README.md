@@ -14,11 +14,12 @@ It is created only with expression node of Maya standard function. No plug-in no
 ![Example of capsule collider](images/capsuleCollider.gif)  
 
 # Supported colliders
-![Supported colliders](images/colliders.jpg)  
+![Supported colliders](images/colliders.png)  
 * Infinite Plane
 * Sphere
 * Capsule
 * Capsule2 (radius individually)
+* Cuboid
 
 # Installation
 Please do one of the following:
@@ -38,6 +39,7 @@ collider.iplane()   # Infinite Plane
 collider.sphere()   # Sphere
 collider.capsule()  # Capsule
 collider.capsule2() # Capsule2 (radius individually)
+collider.cuboid()   # Cuboid
 ```
 
 ## Create Detection

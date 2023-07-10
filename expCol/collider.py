@@ -170,6 +170,28 @@ def capsule2(*args):
 
     return root
 
+@undoWrapper
+def cuboid(*args):
+    root, makePolyCube = cmds.polyCube(w=1, h=1, d=1, sx=1, sy=1, sz=1, ax=[0,1,0], n=getUniqueName('cuboidCollider'))
+    lockHideAttr(root, ['sx','sy','sz'])
+    addCommonAttr(root, 'cuboid')
+    cmds.addAttr(root, ln='width', nn='Width', at='double', dv=1, min=0.001, k=True)
+    cmds.addAttr(root, ln='height', nn='Height', at='double', dv=1, min=0.001, k=True)
+    cmds.addAttr(root, ln='depth', nn='Depth', at='double', dv=1, min=0.001, k=True)
+    setOutlinerColor(root, [1,1,0])
+    disableRenderStats(root)
+
+    # connectAttr
+    cmds.connectAttr(root + '.width', makePolyCube + '.width', f=True)
+    cmds.connectAttr(root + '.height', makePolyCube + '.height', f=True)
+    cmds.connectAttr(root + '.depth', makePolyCube + '.depth', f=True)
+    sh = cmds.listRelatives(root, s=True)[0]
+    setOverrideColor(sh, 17)
+    cmds.connectAttr(root + '.displayType', sh + '.overrideDisplayType', f=True)
+
+    return root
+
+
 def addCommonAttr(obj, colliderType, *args):
     cmds.addAttr(obj, ln='colliderType', nn='Collider Type', dt='string', k=False)
     cmds.setAttr(obj + '.colliderType', colliderType, type='string')
