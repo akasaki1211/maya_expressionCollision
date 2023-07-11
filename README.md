@@ -3,14 +3,14 @@ Create collision detection using expression node.
 
 It is created only with expression node of Maya standard function. No plug-in node or other installation is required.  
 
-**Tested with :**
-* Maya 2024 (Python3.10.8)  
-* Maya 2023 (Python3.9.7)  
-* Maya 2022 (Python3.7.7)  
-* Maya 2020 (Python2.7.11)  
-* Maya 2019 and below are not supported
+> **Tested with :**  
+> * Maya 2024 (Python3.10.8)  
+> * Maya 2023 (Python3.9.7)  
+> * Maya 2022 (Python3.7.7)  
+> * Maya 2020 (Python2.7.11)  
+> * Maya 2019 and below are not supported
 
-**Example of capsule collider :**
+**Example of capsule collider :**  
 ![Example of capsule collider](images/capsuleCollider.gif)  
 
 # Supported colliders
@@ -57,14 +57,16 @@ detection.create(
     radius_rate=None,
 )
 ```
-* `parent` (str): Parent 'transform' or 'joint'.  
-* `input` (str): Child 'transform' or 'joint' before correction.  
-* `output` (str): Child 'transform' or 'joint' after correction.   
-* `controller` (str): Any node to add attributes for control.  
-* `colliders` (list, optional): List of collider names. Defaults to [].
-* `groundCol` (bool, optional): Add horizontal plane collision. Defaults to False.
-* `scalable` (bool, optional): Allow for parent scale of joint-chain and parent scale of colliders. Defaults to False.
-* `radius_rate` (float, optional): Rate at which radius and tip radius are interpolated, between 0 and 1. Defaults to None.  
+||||
+|---|---|---|
+|`parent`|str|Parent 'transform' or 'joint'.|
+|`input`|str|Child 'transform' or 'joint' before correction.|
+|`output`|str|Child 'transform' or 'joint' after correction.|
+|`controller`|str|Any node to add attributes for control.|
+|`colliders`|list, optional|List of collider names. Defaults to [].|
+|`groundCol`|bool, optional|Add horizontal plane collision. Defaults to False.|
+|`scalable`|bool, optional|Allow for parent scale of joint-chain and parent scale of colliders. Defaults to False.|
+|`radius_rate`|float, optional|Rate at which radius and tip radius are interpolated, between 0 and 1. Defaults to None.|
 
 > **Note**  
 > For more information on `parent`, `input` and `output`, please click [here](#what-are-parent-input-and-output).  
@@ -144,14 +146,14 @@ Interpolate radius and tip_radius by the radius_rate value. 0.0 matches radius a
 |Input|world position of the child joint before correction.|
 |Output|world position of the child joint after correction.|
 
-Each is just transform node, and there is no input connection to translate of Parent and Input.
+Each is just transform node, and there is no input connection to translate of Parent and Input.  
 ![ex_01.gif](images/explanation_of_parent_input_output/ex_01.gif)
 
-Also, joint chain is not directly related to collision. It will be controlled by aim constraint or IK later.
+Also, joint chain is not directly related to collision. It will be controlled by aim constraint or IK later.  
 ![ex_02.png](images/explanation_of_parent_input_output/ex_02.png)
 
 If you have more than two joint chain, create the same node graph in the child hierarchy.  
-It's the same for all patterns like Capsule, Infinite plane, Sphere...
+It's the same for all patterns like Capsule, Infinite plane, Sphere...  
 ![ex_03.gif](images/explanation_of_parent_input_output/ex_03.gif)
 
 # Note
