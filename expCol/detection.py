@@ -32,6 +32,9 @@ def create(
         groundCol (bool, optional): add horizontal plane collision. Defaults to False.
         scalable (bool, optional): allow for parent scale of joint-chain and parent scale of colliders. Defaults to False.
         radius_rate (float, optional): rate at which radius and tip radius are interpolated, between 0 and 1. Defaults to None.
+
+    Returns:
+        tuple: Created expression node (exp_node), implicitSphere node for radius visualization (p_radius), and vectorProduct node connected to output (output_vp).
     """
     
     if not parent or not input or not output or not controller:
@@ -141,7 +144,9 @@ def create(
         expStr += "{}.scaleZ = $p_radius;\n".format(p_radius)
     
     # create expression
-    cmds.expression(s=expStr, name='{}_expCol'.format(input), alwaysEvaluate=False)
+    exp_node = cmds.expression(s=expStr, name='{}_expCol'.format(input), alwaysEvaluate=False)
+
+    return exp_node, p_radius, output_vp
 
 def setupCollision(col, index, colliderType, scalable=False, *args):
     defineStr = "//{}\n".format(col)

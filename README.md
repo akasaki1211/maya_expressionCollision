@@ -1,6 +1,7 @@
 # Overview
-Create collision detection using expression node.
+![Maya](https://img.shields.io/static/v1?message=Maya&color=0696D7&logo=Autodesk&logoColor=white&label=) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)  
 
+Create collision detection using expression node.  
 It is created only with expression node of Maya standard function. No plug-in node or other installation is required.  
 
 > **Tested with :**  
@@ -10,7 +11,7 @@ It is created only with expression node of Maya standard function. No plug-in no
 > * Maya 2020 (Python2.7.11)  
 > * Maya 2019 and below are not supported
 
-**Example of capsule collider :**  
+Example of capsule collider :  
 ![Example of capsule collider](images/capsuleCollider.gif)  
 
 # Supported colliders
