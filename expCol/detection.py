@@ -11,10 +11,10 @@ from .utils import (
 
 @undoWrapper
 def create(
-        parent, 
         input, 
         output, 
         controller, 
+        parent=None, 
         colliders=[], 
         groundCol=False, 
         scalable=False, 
@@ -24,10 +24,10 @@ def create(
     """ create collision detection
 
     Args:
-        parent (str): parent transform or joint.
         input (str): input transform or joint.
         output (str): output transform or joint.
         controller (str): node to add control attributes.
+        parent (str, optional): parent transform or joint.
         colliders (list, optional): list of colliders. Defaults to [].
         groundCol (bool, optional): add horizontal plane collision. Defaults to False.
         scalable (bool, optional): allow for parent scale of joint-chain and parent scale of colliders. Defaults to False.
@@ -37,14 +37,13 @@ def create(
         tuple: Created expression node (exp_node), implicitSphere node for radius visualization (p_radius), and vectorProduct node connected to output (output_vp).
     """
     
-    if not parent or not input or not output or not controller:
+    if not input or not output or not controller:
         return
     
     use_tip_radius = not radius_rate is None
 
     add_control_attr(controller, groundCol, use_tip_radius)
 
-    parent_dm = createDecomposeMatrix(parent)
     input_dm = createDecomposeMatrix(input)
     output_vp = cmds.createNode('vectorProduct')
     cmds.setAttr(output_vp + '.operation', 4)
@@ -69,7 +68,18 @@ def create(
             colliderExpStr.append([defineStr, detectionStr])
 
     # expression string
-    expStr = "vector $p0 = <<{0}.outputTranslateX, {0}.outputTranslateY, {0}.outputTranslateZ>>;\n\n".format(parent_dm)
+    expStr = ""
+    
+    if parent:
+        parent_dm = createDecomposeMatrix(parent)
+        expStr += "vector $p0 = <<{0}.outputTranslateX, {0}.outputTranslateY, {0}.outputTranslateZ>>;\n\n".format(parent_dm)
+    else:
+        input_parent = cmds.listRelatives(input, p=True)
+        if input_parent:
+            parent_dm = createDecomposeMatrix(input_parent)
+        else:
+            scalable = False
+    
     expStr += "vector $p = <<{0}.outputTranslateX, {0}.outputTranslateY, {0}.outputTranslateZ>>;\n".format(input_dm)
 
     if scalable:
@@ -83,7 +93,8 @@ def create(
                 expStr += "float $p_radius = ({0}.radius*{1} + {0}.tipRadius*{2}) * $p_scaleFactor;\n".format(controller, 1.0-radius_rate, radius_rate)
         else:
             expStr += "float $p_radius = {0}.radius * $p_scaleFactor;\n".format(controller)
-        expStr += "float $d = mag($p - $p0);\n\n"
+        if parent:
+            expStr += "float $d = mag($p - $p0);\n\n"
     else:
         if use_tip_radius:
             if radius_rate == 0.0:
@@ -94,11 +105,12 @@ def create(
                 expStr += "float $p_radius = {0}.radius*{1} + {0}.tipRadius*{2};\n".format(controller, 1.0-radius_rate, radius_rate)
         else:
             expStr += "float $p_radius = {0}.radius;\n".format(controller)
-        vec = []
-        vec.append(cmds.getAttr(input_dm + '.outputTranslateX') - cmds.getAttr(parent_dm + '.outputTranslateX'))
-        vec.append(cmds.getAttr(input_dm + '.outputTranslateY') - cmds.getAttr(parent_dm + '.outputTranslateY'))
-        vec.append(cmds.getAttr(input_dm + '.outputTranslateZ') - cmds.getAttr(parent_dm + '.outputTranslateZ'))
-        expStr += "float $d = {};\n\n".format(math.sqrt(vec[0]**2 + vec[1]**2 + vec[2]**2))
+        if parent:
+            vec = []
+            vec.append(cmds.getAttr(input_dm + '.outputTranslateX') - cmds.getAttr(parent_dm + '.outputTranslateX'))
+            vec.append(cmds.getAttr(input_dm + '.outputTranslateY') - cmds.getAttr(parent_dm + '.outputTranslateY'))
+            vec.append(cmds.getAttr(input_dm + '.outputTranslateZ') - cmds.getAttr(parent_dm + '.outputTranslateZ'))
+            expStr += "float $d = {};\n\n".format(math.sqrt(vec[0]**2 + vec[1]**2 + vec[2]**2))
     
     # collider define
     for cs in colliderExpStr:
@@ -124,8 +136,9 @@ def create(
         expStr += "\t\t$p = <<$p.x, ($groundHeight + $p_radius), $p.z>>;\n"
         expStr += "\t}\n\n"
 
-    expStr += "\t//keep length\n"
-    expStr += "\t$p = $p0 + (unit($p - $p0) * $d);\n"
+    if parent:
+        expStr += "\t//keep length\n"
+        expStr += "\t$p = $p0 + (unit($p - $p0) * $d);\n"
 
     expStr += "}\n\n"
 
@@ -309,7 +322,7 @@ def add_control_attr(ctrl, groundCol=False, tip_radius=False, *args):
     if not cmds.attributeQuery('collision', node=ctrl, ex=True):
         cmds.addAttr(ctrl, ln='collision', nn='__________', at='enum', en='Collision', k=True)
     if not cmds.attributeQuery('colIteration', node=ctrl, ex=True):
-        cmds.addAttr(ctrl, ln="colIteration", nn='Colision Iteration', at='long', min=0, dv=3, k=True)
+        cmds.addAttr(ctrl, ln="colIteration", nn='Collision Iteration', at='long', min=0, dv=3, k=True)
     if not cmds.attributeQuery('radius', node=ctrl, ex=True):
         cmds.addAttr(ctrl, ln="radius", nn='Radius', at='double', min=0, dv=1, k=True)
     if tip_radius:
@@ -317,4 +330,4 @@ def add_control_attr(ctrl, groundCol=False, tip_radius=False, *args):
             cmds.addAttr(ctrl, ln="tipRadius", nn='Tip Radius', at='double', min=0, dv=1, k=True)
     if groundCol:
         if not cmds.attributeQuery('groundHeight', node=ctrl, ex=True):
-            cmds.addAttr(ctrl, ln="groundHeight", nn='GroundHeight', at='double', dv=0, k=True)
+            cmds.addAttr(ctrl, ln="groundHeight", nn='Ground Height', at='double', dv=0, k=True)

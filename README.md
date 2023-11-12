@@ -1,5 +1,5 @@
 # Overview
-![Maya](https://img.shields.io/static/v1?message=Maya&color=0696D7&logo=Autodesk&logoColor=white&label=) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)  
+![Maya](https://img.shields.io/static/v1?message=Maya&color=0696D7&logo=Autodesk&logoColor=white&label=) ![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)  
 
 Create collision detection using expression node.  
 It is created only with expression node of Maya standard function. No plug-in node or other installation is required.  
@@ -48,10 +48,10 @@ collider.cuboid()   # Cuboid
 from expCol import detection
 
 detection.create(
-    'parent', 
     'input', 
     'output', 
     'controller', 
+    parent='parent', 
     colliders=collider_list, 
     groundCol=True, 
     scalable=False,
@@ -60,10 +60,10 @@ detection.create(
 ```
 ||||
 |---|---|---|
-|`parent`|str|Parent 'transform' or 'joint'.|
 |`input`|str|Child 'transform' or 'joint' before correction.|
 |`output`|str|Child 'transform' or 'joint' after correction.|
 |`controller`|str|Any node to add attributes for control.|
+|`parent`|str, optional|Parent 'transform' or 'joint'.|
 |`colliders`|list, optional|List of collider names. Defaults to [].|
 |`groundCol`|bool, optional|Add horizontal plane collision. Defaults to False.|
 |`scalable`|bool, optional|Allow for parent scale of joint-chain and parent scale of colliders. Defaults to False.|
@@ -114,10 +114,10 @@ collider_list.append(collider.capsule())
 # Create Detections
 for i in range(len(jointList)-1):
     detection.create(
-        'parent_{}'.format(i), 
         'input_{}'.format(i), 
         'output_{}'.format(i), 
         'rootCtl', 
+        parent='parent_{}'.format(i), 
         colliders=collider_list, 
         groundCol=True, 
         scalable=True,
