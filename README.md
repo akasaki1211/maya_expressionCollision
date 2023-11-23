@@ -70,7 +70,7 @@ detection.create(
 |`radius_rate`|float, optional|Rate at which radius and tip radius are interpolated, between 0 and 1. Defaults to None.|
 
 > **Note**  
-> For more information on `parent`, `input` and `output`, please click [here](#what-are-parent-input-and-output).  
+> For more information on `input`, `output` and `parent`, please click [here](#what-are-input-output-and-parent).  
 
 If you just want to add an attribute to a controller, do the following. It is also called in `detection.create`.  
 ```python
@@ -139,13 +139,47 @@ If scalable is set to True, the scale of the parent of the joint-chain or the pa
 Interpolate radius and tip_radius by the radius_rate value. 0.0 matches radius and 1.0 matches tip_radius.  
 ![radius_rate.png](images/radius_rate.png)
 
-# What are Parent, Input, and Output?
+## `parent` option
+When creating a detection for bone with length, `parent` option is usually used.  
+If parent is not specified, a simple point detection is created.  
+![no_parent.gif](images/no_parent.gif)
+
+### example
+```python
+from maya import cmds
+from expCol import collider, detection
+
+# Create input and output
+rootCtl = cmds.createNode('transform', n='rootCtl')
+in_point = cmds.createNode('transform', n='input')
+out_point = cmds.createNode('transform', n='output')
+cmds.parent(in_point, rootCtl)
+cmds.parent(out_point, rootCtl)
+cmds.setAttr(rootCtl + '.ty', 5)
+
+# Create Colliders
+collider_list = []
+collider_list.append(collider.sphere())
+collider_list.append(collider.capsule())
+
+# Create Detection
+detection.create(
+    in_point, 
+    out_point, 
+    rootCtl, 
+    colliders=collider_list, 
+    groundCol=True, 
+    scalable=True
+)
+```
+
+# What are Input, Output, and Parent?
 
 |||
 |---|---|
-|Parent|world position of the parent joint.|
 |Input|world position of the child joint before correction.|
 |Output|world position of the child joint after correction.|
+|Parent|world position of the parent joint.|
 
 Each is just transform node, and there is no input connection to translate of Parent and Input.  
 ![ex_01.gif](images/explanation_of_parent_input_output/ex_01.gif)
