@@ -76,7 +76,7 @@ def create(
     else:
         input_parent = cmds.listRelatives(input, p=True)
         if input_parent:
-            parent_dm = createDecomposeMatrix(input_parent)
+            parent_dm = createDecomposeMatrix(input_parent[0])
         else:
             scalable = False
     
