@@ -4,12 +4,12 @@
 Create collision detection using expression node.  
 It is created only with expression node of Maya standard function. No plug-in node or other installation is required.  
 
-> **Tested with :**  
+> **Supported :**  
 > * Maya 2024 (Python3.10.8)  
 > * Maya 2023 (Python3.9.7)  
 > * Maya 2022 (Python3.7.7)  
 > * Maya 2020 (Python2.7.11)  
-> * Maya 2019 and below are not supported
+> * Maya 2019 and below are **"not"** supported
 
 Example of capsule collider :  
 ![Example of capsule collider](images/capsuleCollider.gif)  
@@ -24,17 +24,17 @@ Example of capsule collider :
 
 # Installation
 Please do one of the following:
-* Copy the expCol directory into the `C:\Users\<username>\Documents\maya\scripts`.
-* Add the parent directory of expCol to PYTHONPATH environment variable.
-* Add the parent directory of expCol to PYTHONPATH in Maya.env.
+* Copy the expcol directory into the `C:\Users\<username>\Documents\maya\scripts`.
+* Add the parent directory of expcol to PYTHONPATH environment variable.
+* Add the parent directory of expcol to PYTHONPATH in Maya.env.
 
 > **Note**  
-> `expCol` module is required on rigging, but is not needed on animation.
+> `expcol` module is required on rigging, but is not needed on animation.
 
 # Usage
 ## Create Collider
 ```python
-from expCol import collider
+from expcol import collider
 
 collider.iplane()   # Infinite Plane
 collider.sphere()   # Sphere
@@ -45,7 +45,7 @@ collider.cuboid()   # Cuboid
 
 ## Create Detection
 ```python
-from expCol import detection
+from expcol import detection
 
 detection.create(
     'input', 
@@ -85,7 +85,7 @@ detection.add_control_attr(
 Running the following code will create a sample joint, create a collider, and even create a detection.  
 ```python
 from maya import cmds
-from expCol import collider, detection
+from expcol import collider, detection
 
 # Create sample joint chain
 rootCtl = cmds.createNode('transform', n='rootCtl')
@@ -147,7 +147,7 @@ If parent is not specified, a simple point detection is created.
 ### example
 ```python
 from maya import cmds
-from expCol import collider, detection
+from expcol import collider, detection
 
 # Create input and output
 rootCtl = cmds.createNode('transform', n='rootCtl')
