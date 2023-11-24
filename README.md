@@ -30,10 +30,10 @@ Example of capsule collider :
 ## pip install
 ```
 cd C:\Program Files\Autodesk\Maya2024\bin
-mayapy -m pip install git+https://github.com/akasaki1211/maya_expressionCollision.git
+mayapy -m pip install -U git+https://github.com/akasaki1211/maya_expressionCollision.git
 ```
+To specify version and location :
 ```
-// Specify version and location
 mayapy -m pip install -U git+https://github.com/akasaki1211/maya_expressionCollision.git@2.0.0 -t C:\Users\<USERNAME>\Documents\maya\2024\scripts\site-packages
 ```
 
