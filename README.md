@@ -1,15 +1,15 @@
 # Overview
-![Maya](https://img.shields.io/static/v1?message=Maya&color=0696D7&logo=Autodesk&logoColor=white&label=) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)  
+![Maya](https://img.shields.io/static/v1?message=Maya&color=0696D7&logo=Autodesk&logoColor=white&label=) ![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)  
 
 Create collision detection using expression node.  
 It is created only with expression node of Maya standard function. No plug-in node or other installation is required.  
 
-> **Tested with :**  
+> **Supported :**  
 > * Maya 2024 (Python3.10.8)  
 > * Maya 2023 (Python3.9.7)  
 > * Maya 2022 (Python3.7.7)  
 > * Maya 2020 (Python2.7.11)  
-> * Maya 2019 and below are not supported
+> * Maya 2019 and below are **"not"** supported
 
 Example of capsule collider :  
 ![Example of capsule collider](images/capsuleCollider.gif)  
@@ -23,18 +23,31 @@ Example of capsule collider :
 * Cuboid
 
 # Installation
-Please do one of the following:
-* Copy the expCol directory into the `C:\Users\<username>\Documents\maya\scripts`.
-* Add the parent directory of expCol to PYTHONPATH environment variable.
-* Add the parent directory of expCol to PYTHONPATH in Maya.env.
 
 > **Note**  
-> `expCol` module is required on rigging, but is not needed on animation.
+> `expcol` module is required on rigging, but is not needed on animation.
+
+## pip install
+```
+cd C:\Program Files\Autodesk\Maya2024\bin
+mayapy -m pip install -U git+https://github.com/akasaki1211/maya_expressionCollision.git
+```
+To specify version and location :
+```
+mayapy -m pip install -U git+https://github.com/akasaki1211/maya_expressionCollision.git@2.0.0 -t C:\Users\<USERNAME>\Documents\maya\2024\scripts\site-packages
+```
+
+## manual install
+1. Zip download the Code and unzip it to any location.  
+2. Please do one of the following:
+   * Copy the `expcol` directory into the `C:\Users\<USERNAME>\Documents\maya\scripts`.
+   * Add the parent directory of `expcol` to PYTHONPATH environment variable.
+   * Add the parent directory of `expcol` to PYTHONPATH in Maya.env.
 
 # Usage
 ## Create Collider
 ```python
-from expCol import collider
+from expcol import collider
 
 collider.iplane()   # Infinite Plane
 collider.sphere()   # Sphere
@@ -45,13 +58,13 @@ collider.cuboid()   # Cuboid
 
 ## Create Detection
 ```python
-from expCol import detection
+from expcol import detection
 
 detection.create(
-    'parent', 
     'input', 
     'output', 
     'controller', 
+    parent='parent', 
     colliders=collider_list, 
     groundCol=True, 
     scalable=False,
@@ -60,17 +73,17 @@ detection.create(
 ```
 ||||
 |---|---|---|
-|`parent`|str|Parent 'transform' or 'joint'.|
 |`input`|str|Child 'transform' or 'joint' before correction.|
 |`output`|str|Child 'transform' or 'joint' after correction.|
 |`controller`|str|Any node to add attributes for control.|
+|`parent`|str, optional|Parent 'transform' or 'joint'.|
 |`colliders`|list, optional|List of collider names. Defaults to [].|
 |`groundCol`|bool, optional|Add horizontal plane collision. Defaults to False.|
 |`scalable`|bool, optional|Allow for parent scale of joint-chain and parent scale of colliders. Defaults to False.|
 |`radius_rate`|float, optional|Rate at which radius and tip radius are interpolated, between 0 and 1. Defaults to None.|
 
 > **Note**  
-> For more information on `parent`, `input` and `output`, please click [here](#what-are-parent-input-and-output).  
+> For more information on `input`, `output` and `parent`, please click [here](#what-are-input-output-and-parent).  
 
 If you just want to add an attribute to a controller, do the following. It is also called in `detection.create`.  
 ```python
@@ -85,7 +98,7 @@ detection.add_control_attr(
 Running the following code will create a sample joint, create a collider, and even create a detection.  
 ```python
 from maya import cmds
-from expCol import collider, detection
+from expcol import collider, detection
 
 # Create sample joint chain
 rootCtl = cmds.createNode('transform', n='rootCtl')
@@ -114,10 +127,10 @@ collider_list.append(collider.capsule())
 # Create Detections
 for i in range(len(jointList)-1):
     detection.create(
-        'parent_{}'.format(i), 
         'input_{}'.format(i), 
         'output_{}'.format(i), 
         'rootCtl', 
+        parent='parent_{}'.format(i), 
         colliders=collider_list, 
         groundCol=True, 
         scalable=True,
@@ -139,13 +152,47 @@ If scalable is set to True, the scale of the parent of the joint-chain or the pa
 Interpolate radius and tip_radius by the radius_rate value. 0.0 matches radius and 1.0 matches tip_radius.  
 ![radius_rate.png](images/radius_rate.png)
 
-# What are Parent, Input, and Output?
+## `parent` option
+When creating a detection for bone with length, `parent` option is usually used.  
+If parent is not specified, a simple point detection is created.  
+![no_parent.gif](images/no_parent.gif)
+
+### example
+```python
+from maya import cmds
+from expcol import collider, detection
+
+# Create input and output
+rootCtl = cmds.createNode('transform', n='rootCtl')
+in_point = cmds.createNode('transform', n='input')
+out_point = cmds.createNode('transform', n='output')
+cmds.parent(in_point, rootCtl)
+cmds.parent(out_point, rootCtl)
+cmds.setAttr(rootCtl + '.ty', 5)
+
+# Create Colliders
+collider_list = []
+collider_list.append(collider.sphere())
+collider_list.append(collider.capsule())
+
+# Create Detection
+detection.create(
+    in_point, 
+    out_point, 
+    rootCtl, 
+    colliders=collider_list, 
+    groundCol=True, 
+    scalable=True
+)
+```
+
+# What are Input, Output, and Parent?
 
 |||
 |---|---|
-|Parent|world position of the parent joint.|
 |Input|world position of the child joint before correction.|
 |Output|world position of the child joint after correction.|
+|Parent|world position of the parent joint.|
 
 Each is just transform node, and there is no input connection to translate of Parent and Input.  
 ![ex_01.gif](images/explanation_of_parent_input_output/ex_01.gif)
