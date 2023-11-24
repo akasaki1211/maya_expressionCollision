@@ -23,13 +23,26 @@ Example of capsule collider :
 * Cuboid
 
 # Installation
-Please do one of the following:
-* Copy the expcol directory into the `C:\Users\<username>\Documents\maya\scripts`.
-* Add the parent directory of expcol to PYTHONPATH environment variable.
-* Add the parent directory of expcol to PYTHONPATH in Maya.env.
 
 > **Note**  
 > `expcol` module is required on rigging, but is not needed on animation.
+
+## pip install
+```
+cd C:\Program Files\Autodesk\Maya2024\bin
+mayapy -m pip install git+https://github.com/akasaki1211/maya_expressionCollision.git
+```
+```
+// Specify version and location
+mayapy -m pip install -U git+https://github.com/akasaki1211/maya_expressionCollision.git@2.0.0 -t C:\Users\<USERNAME>\Documents\maya\2024\scripts\site-packages
+```
+
+## manual install
+1. Zip download the Code and unzip it to any location.  
+2. Please do one of the following:
+   * Copy the `expcol` directory into the `C:\Users\<USERNAME>\Documents\maya\scripts`.
+   * Add the parent directory of `expcol` to PYTHONPATH environment variable.
+   * Add the parent directory of `expcol` to PYTHONPATH in Maya.env.
 
 # Usage
 ## Create Collider
