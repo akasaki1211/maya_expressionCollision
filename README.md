@@ -208,6 +208,82 @@ If you have more than two joint chain, create the same node graph in the child h
 It's the same for all patterns like Capsule, Infinite plane, Sphere...  
 ![ex_03.gif](images/explanation_of_parent_input_output/ex_03.gif)
 
+# Sample script
+Below is a sample script to create detections on any joint-chain. It should be run by selecting controller, then root-joint. X-axis of each joint must face the child.  
+
+![sample_script.png](images/sample_script.png)
+
+```python
+from maya import cmds
+from expcol import collider, detection
+
+# Get selection from Maya's scene
+sel = cmds.ls(sl=True)
+ctl = sel[0]           # The first selected object is a control
+root_joint = sel[1]    # The second selected object is the root joint
+
+# Function to get all child joints of a given node recursively
+def get_children(node):
+    children = []
+    child = cmds.listRelatives(node, c=True, type=["joint", "transform"])
+    if child:
+        children.append(child[0])
+        children.extend(get_children(child[0]))
+    return children
+
+joints = [root_joint] + get_children(root_joint) # List of all joints starting from the root
+
+parents = []
+inputs = []
+outputs = []
+
+# Iterate over pairs of joints to set up constraints and transforms
+for a, b in zip(joints, joints[1:]):
+    
+    p = cmds.listRelatives(a, p=True) # Get parent of joint a
+    if p:
+        p = p[0]
+    
+    a_pos = cmds.xform(a, q=True, ws=True, t=True) # Get world position of joint a
+    a_rot = cmds.xform(a, q=True, ws=True, ro=True) # Get world rotation of joint a
+    b_pos = cmds.xform(b, q=True, ws=True, t=True) # Get world position of joint b
+    
+    # Create auxiliary transforms for detection setup
+    prt = cmds.createNode('transform', n='{}_parent'.format(a), p=p)
+    ipt = cmds.createNode('transform', n='{}_input'.format(a), p=p)
+    out = cmds.createNode('transform', n='{}_output'.format(a), p=p)
+    
+    # Set the position and rotation for the created nodes
+    cmds.xform(prt, ws=True, t=a_pos)
+    cmds.xform(prt, ws=True, ro=a_rot) # Because parent is specified as worldUpObject in aimConstraint, rotation must also be aligned.
+    cmds.xform(ipt, ws=True, t=b_pos)
+    cmds.xform(out, ws=True, t=b_pos)
+    
+    # Aim constraint to align joint a towards joint b
+    cmds.aimConstraint(out, a, aim=[1,0,0], u=[0,0,1], wu=[0,0,1], wut='objectrotation', wuo=prt)
+    
+    parents.append(prt)
+    inputs.append(ipt)
+    outputs.append(out)
+
+# Create Colliders
+collider_list = []
+collider_list.append(collider.iplane())  # Adding an infinite plane collider
+collider_list.append(collider.capsule()) # Adding a capsule collider
+
+# Create Detections for each joint
+for prt, ipt, out in zip(parents, inputs, outputs):
+    detection.create(
+        ipt, 
+        out, 
+        ctl, 
+        parent=prt, 
+        colliders=collider_list, 
+        groundCol=True, 
+        scalable=True
+    )
+```
+
 # Note
 * A large number of detections can be very heavy.
 * The number of colliders cannot be changed after a detection (expression node) is created.
