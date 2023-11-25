@@ -27,7 +27,7 @@ Example of capsule collider :
 > **Note**  
 > `expcol` module is required on rigging, but is not needed on animation.
 
-## pip install
+## pip install (2.0.0 or higher)
 ```
 cd C:\Program Files\Autodesk\Maya2024\bin
 mayapy -m pip install -U git+https://github.com/akasaki1211/maya_expressionCollision.git
