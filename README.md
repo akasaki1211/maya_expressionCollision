@@ -186,6 +186,10 @@ detection.create(
 )
 ```
 
+## Collision Iteration
+High `Colision Iteration` value increases the accuracy of collisions, but also increases the processing laod. Recommended value is 3 to 5. 0 disables detections.  
+![col_iteration.gif](images/col_iteration.gif)
+
 # What are Input, Output, and Parent?
 
 |||
@@ -205,7 +209,6 @@ It's the same for all patterns like Capsule, Infinite plane, Sphere...
 ![ex_03.gif](images/explanation_of_parent_input_output/ex_03.gif)
 
 # Note
-* A high `Colision Iteration` value increases the accuracy of collision detection, but it also increases the processing load.
 * A large number of detections can be very heavy.
 * The number of colliders cannot be changed after a detection (expression node) is created.
 
