@@ -1,8 +1,8 @@
 # Overview
 ![Maya](https://img.shields.io/static/v1?message=Maya&color=0696D7&logo=Autodesk&logoColor=white&label=) ![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)  
 
-Create collision detection using expression node.  
-It is created only with expression node of Maya standard function. No plug-in node or other installation is required.  
+`expcol` creates collision detection using only the built-in expression nodes of Maya.  
+No plugins or additional installations are required for the animation process. Only the rigging process requires these installations.  
 
 > **Supported :**  
 > * Maya 2024 (Python3.10.8)  
