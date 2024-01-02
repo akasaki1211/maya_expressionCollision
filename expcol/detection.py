@@ -9,8 +9,39 @@ from .utils import (
     createUnitVector
 )
 
+class CreateConfig:
+    
+    TYPE = "standard"
+
+    @classmethod
+    def set_type(cls, type):
+        if type == "customnode":
+            try:
+                cmds.loadPlugin('colDetectionNode.mll', qt=True)
+                print("Set create type to 'customnode' (use colDetectionMtxNode).")
+                cls.TYPE = type
+            except:
+                print("Plugin \"colDetectionNode.mll\" not found.")
+                print("Set create type to 'standard' (use expression node).")
+                cls.TYPE = "standard"
+        else:
+            print("Set create type to 'standard' (use expression node).")
+            cls.TYPE = "standard"
+
+def create(input, output, controller, *args, **kwargs):
+    if CreateConfig.TYPE == "customnode":
+        return create_customnode(input, output, controller, *args, **kwargs)
+    else:
+        return create_standard(input, output, controller, *args, **kwargs)
+
+def add_control_attr(ctrl, *args, **kwargs):
+    if CreateConfig.TYPE == "customnode":
+        return add_control_attr_customnode(ctrl, *args, **kwargs)
+    else:
+        return add_control_attr_standard(ctrl, *args, **kwargs)
+
 @undoWrapper
-def create(
+def create_standard(
         input, 
         output, 
         controller, 
@@ -19,7 +50,8 @@ def create(
         groundCol=False, 
         scalable=False, 
         radius_rate=None,
-        *args
+        *args, 
+        **kwargs
     ):
     """ create collision detection
 
@@ -318,7 +350,147 @@ def setupCollision(col, index, colliderType, scalable=False, *args):
     return defineStr, detectionStr
 
 @undoWrapper
-def add_control_attr(ctrl, groundCol=False, tip_radius=False, *args):
+def create_customnode(
+        input, 
+        output, 
+        controller, 
+        parent, 
+        colliders=[], 
+        radius_rate=None,
+        *args, 
+        **kwargs
+    ):
+    """ create collision detection using "colDetectionNode.mll"
+
+    Args:
+        input (str): input transform or joint.
+        output (str): output transform or joint.
+        controller (str): node to add control attributes.
+        parent (str): parent transform or joint.
+        colliders (list, optional): list of colliders. Defaults to [].
+        radius_rate (float, optional): rate at which radius and tip radius are interpolated, between 0 and 1. Defaults to None.
+
+    Returns:
+        tuple: Created colDetectionMtxNode, implicitSphere node for radius visualization (p_radius), and vectorProduct node connected to output (output_vp).
+    """
+
+    if not input or not output or not controller or not parent:
+        return
+    
+    use_tip_radius = not radius_rate is None
+
+    add_control_attr(controller, use_tip_radius)
+
+    output_vp = cmds.createNode('vectorProduct')
+    cmds.setAttr(output_vp + '.operation', 4)
+    cmds.setAttr(output_vp + '.normalizeOutput', 0)
+    cmds.connectAttr(output + '.parentInverseMatrix[0]', output_vp + '.matrix', f=True)
+    cmds.connectAttr(output_vp + '.output', output + '.translate', f=True)
+
+    p_radius_shape = cmds.createNode('implicitSphere')
+    p_radius = cmds.listRelatives(p_radius_shape, p=True)[0]
+    p_radius = cmds.rename(p_radius, '{}_radius'.format(output))
+    p_radius_shape = cmds.listRelatives(p_radius, s=True)[0]
+    cmds.parent(p_radius, output, r=True)
+    lockHideAttr(p_radius, ['tx','ty','tz','rx','ry','rz'])
+    cmds.setAttr(p_radius_shape + '.overrideEnabled', 1)
+    cmds.setAttr(p_radius_shape + '.overrideDisplayType', 2)
+
+    detection_node = cmds.createNode('colDetectionMtxNode')
+    
+    cmds.connectAttr(controller + ".colIteration", detection_node + ".iterations", f=True)
+    cmds.connectAttr(controller + ".groundHeight", detection_node + ".groundHeight", f=True)
+    cmds.connectAttr(controller + ".groundCollision", detection_node + ".enableGroundCol", f=True)
+
+    if use_tip_radius:
+        if radius_rate == 0.0:
+            cmds.connectAttr(controller + ".radius", detection_node + ".radius", f=True)
+            cmds.connectAttr(controller + ".radius", p_radius + ".scaleX", f=True)
+            cmds.connectAttr(controller + ".radius", p_radius + ".scaleY", f=True)
+            cmds.connectAttr(controller + ".radius", p_radius + ".scaleZ", f=True)
+        elif radius_rate == 1.0:
+            cmds.connectAttr(controller + ".tipRadius", detection_node + ".radius", f=True)
+            cmds.connectAttr(controller + ".tipRadius", p_radius + ".scaleX", f=True)
+            cmds.connectAttr(controller + ".tipRadius", p_radius + ".scaleY", f=True)
+            cmds.connectAttr(controller + ".tipRadius", p_radius + ".scaleZ", f=True)
+        else:
+            try:
+                lerp = cmds.createNode('lerp')
+                cmds.setAttr(lerp + ".weight", radius_rate)
+                cmds.connectAttr(controller + ".radius", lerp + ".input1", f=True)
+                cmds.connectAttr(controller + ".tipRadius", lerp + ".input2", f=True)
+                cmds.connectAttr(lerp + ".output", detection_node + ".radius", f=True)
+                cmds.connectAttr(lerp + ".output", p_radius + ".scaleX", f=True)
+                cmds.connectAttr(lerp + ".output", p_radius + ".scaleY", f=True)
+                cmds.connectAttr(lerp + ".output", p_radius + ".scaleZ", f=True)
+            except:
+                bl = cmds.createNode('blendColors')
+                cmds.setAttr(bl + ".blender", radius_rate)
+                cmds.connectAttr(controller + ".radius", bl + ".color2R", f=True)
+                cmds.connectAttr(controller + ".tipRadius", bl + ".color1R", f=True)
+                cmds.connectAttr(bl + ".outputR", detection_node + ".radius", f=True)
+                cmds.connectAttr(bl + ".outputR", p_radius + ".scaleX", f=True)
+                cmds.connectAttr(bl + ".outputR", p_radius + ".scaleY", f=True)
+                cmds.connectAttr(bl + ".outputR", p_radius + ".scaleZ", f=True)
+    else:
+        cmds.connectAttr(controller + ".radius", detection_node + ".radius", f=True)
+        cmds.connectAttr(controller + ".radius", p_radius + ".scaleX", f=True)
+        cmds.connectAttr(controller + ".radius", p_radius + ".scaleY", f=True)
+        cmds.connectAttr(controller + ".radius", p_radius + ".scaleZ", f=True)
+
+    cmds.connectAttr(detection_node + ".output", output_vp + '.input1', f=True)
+    cmds.connectAttr(input + ".worldMatrix[0]", detection_node + ".inputMatrix", f=True)
+    cmds.connectAttr(parent + ".worldMatrix[0]", detection_node + ".parentMatrix", f=True)
+
+    input_world_pos = cmds.xform(input, q=True, ws=True, t=True)
+    parent_world_pos = cmds.xform(parent, q=True, ws=True, t=True)
+    vec = [
+        input_world_pos[0] - parent_world_pos[0],
+        input_world_pos[1] - parent_world_pos[1],
+        input_world_pos[2] - parent_world_pos[2],
+    ]
+    cmds.setAttr(detection_node + ".distance", math.sqrt(vec[0]**2 + vec[1]**2 + vec[2]**2))
+    
+    sphere_col_idx = 0
+    capsule_col_idx = 0
+    iplane_col_cidx = 0
+    
+    for col in colliders:
+        
+        if not cmds.objExists(col):
+            continue
+
+        colliderType = cmds.getAttr(col + '.colliderType')
+        
+        if colliderType == 'sphere':
+            cmds.connectAttr(col + ".worldMatrix[0]", detection_node + ".sphereCollider[{}].sphereColMatrix".format(sphere_col_idx), f=True)
+            cmds.connectAttr(col + ".radius", detection_node + ".sphereCollider[{}].sphereColRadius".format(sphere_col_idx), f=True)
+            sphere_col_idx += 1
+        
+        elif colliderType == 'capsule' or colliderType == 'capsule2':
+            if colliderType == 'capsule' :
+                radius_attr_a = ".radius"
+                radius_attr_b = ".radius"
+            else:
+                radius_attr_a = ".radiusA"
+                radius_attr_b = ".radiusB"
+            
+            a = cmds.listConnections(col + '.sphereA', d=0)[0]
+            b = cmds.listConnections(col + '.sphereB', d=0)[0]
+            cmds.connectAttr(a + ".worldMatrix[0]", detection_node + ".capsuleCollider[{}].capsuleColMatrixA".format(capsule_col_idx), f=True)
+            cmds.connectAttr(b + ".worldMatrix[0]", detection_node + ".capsuleCollider[{}].capsuleColMatrixB".format(capsule_col_idx), f=True)
+            cmds.connectAttr(col + radius_attr_a, detection_node + ".capsuleCollider[{}].capsuleColRadiusA".format(capsule_col_idx), f=True)
+            cmds.connectAttr(col + radius_attr_b, detection_node + ".capsuleCollider[{}].capsuleColRadiusB".format(capsule_col_idx), f=True)
+            capsule_col_idx += 1
+        
+        elif colliderType == 'infinitePlane':
+            cmds.connectAttr(col + ".worldMatrix[0]", detection_node + ".infinitePlaneCollider[{}].infinitePlaneColMatrix".format(sphere_col_idx), f=True)
+            iplane_col_cidx += 1
+    
+    return detection_node, p_radius, output_vp
+
+@undoWrapper
+def add_control_attr_standard(ctrl, groundCol=False, tip_radius=False, *args, **kwargs):
     if not cmds.attributeQuery('collision', node=ctrl, ex=True):
         cmds.addAttr(ctrl, ln='collision', nn='__________', at='enum', en='Collision', k=True)
     if not cmds.attributeQuery('colIteration', node=ctrl, ex=True):
@@ -331,3 +503,20 @@ def add_control_attr(ctrl, groundCol=False, tip_radius=False, *args):
     if groundCol:
         if not cmds.attributeQuery('groundHeight', node=ctrl, ex=True):
             cmds.addAttr(ctrl, ln="groundHeight", nn='Ground Height', at='double', dv=0, k=True)
+
+@undoWrapper
+def add_control_attr_customnode(ctrl, tip_radius=False, *args, **kwargs):
+    if not cmds.attributeQuery('collision', node=ctrl, ex=True):
+        cmds.addAttr(ctrl, ln='collision', nn='__________', at='enum', en='Collision', k=True)
+    if not cmds.attributeQuery('colIteration', node=ctrl, ex=True):
+        cmds.addAttr(ctrl, ln="colIteration", nn='Collision Iteration', at='long', min=0, dv=3, k=True)
+    if not cmds.attributeQuery('radius', node=ctrl, ex=True):
+        cmds.addAttr(ctrl, ln="radius", nn='Radius', at='double', min=0, dv=1, k=True)
+    if tip_radius:
+        if not cmds.attributeQuery('tipRadius', node=ctrl, ex=True):
+            cmds.addAttr(ctrl, ln="tipRadius", nn='Tip Radius', at='double', min=0, dv=1, k=True)
+    if not cmds.attributeQuery('groundCollision', node=ctrl, ex=True):
+        cmds.addAttr(ctrl, ln="groundCollision", nn='Ground Collision', at='bool', dv=True, k=True)
+    if not cmds.attributeQuery('groundHeight', node=ctrl, ex=True):
+        cmds.addAttr(ctrl, ln="groundHeight", nn='Ground Height', at='double', dv=0, k=True)
+

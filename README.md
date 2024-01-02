@@ -4,7 +4,7 @@
 `expcol` creates collision detection using only the built-in expression nodes of Maya.  
 No plugins or additional installations are required for the animation process. Only the rigging process requires these installations.  
 
-> **Supported :**  
+> **Supported Maya:**  
 > * Maya 2024 (Python3.10.8)  
 > * Maya 2023 (Python3.9.7)  
 > * Maya 2022 (Python3.7.7)  
@@ -94,7 +94,7 @@ detection.add_control_attr(
 )
 ```
 
-## Example
+## Quick sample
 Running the following code will create a sample joint, create a collider, and even create a detection.  
 ```python
 from maya import cmds
@@ -288,7 +288,7 @@ for prt, ipt, out in zip(parents, inputs, outputs):
 * A large number of detections can be very heavy.
 * The number of colliders cannot be changed after a detection (expression node) is created.
 
-## Processing time
+## Processing time⏱
 Processing time per joint measured using maya's profiler.  
 |Collider (Iteration:5)|Avg|
 |---|---|
@@ -301,3 +301,43 @@ Processing time per joint measured using maya's profiler.
 > * Windows 11  
 > * Intel(R) Core(TM) i7-10700 CPU @ 2.90GHz  
 > * Maya 2024  
+
+## More faster🚀
+A custom node [colDetectionNode](https://github.com/akasaki1211/colDetectionNode) can be used to make it faster.  
+![colDetectionNode-performance](https://github.com/akasaki1211/colDetectionNode/blob/main/.images/performance.gif)
+
+1. Place **colDetectionNode.mll** in the plug-ins folder and make sure it is ready to load.
+2. Add `detection.CreateConfig.set_type("customnode")` before `detection.create`.
+   * `parent` is required.
+   * `groundCol` is ignored, because it can be switched later.
+   * `scalable` is ignored, because scale is always in enabled.
+
+```python
+### 2.1.0 or higher ###
+
+from expcol import detection
+
+# Use colDetectionMtxNode
+detection.CreateConfig.set_type("customnode")
+
+# Use expression [*default]
+#detection.CreateConfig.set_type("standard")
+
+# In "customnode" mode, 
+# - 'parent' is required.
+# - 'groundCol' is ignored, because it can be switched later.
+# - 'scalable' is ignored, because scale is always in enabled.
+detection.create(
+    'input', 
+    'output', 
+    'controller', 
+    'parent',           # required
+    colliders=collider_list, 
+    groundCol=True,     # ignored
+    scalable=False,     # ignored
+    radius_rate=None,
+)
+```
+
+> **Note**  
+> The plugin **colDetectionNode.mll** is also required for the animation process.
