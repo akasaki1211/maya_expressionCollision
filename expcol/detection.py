@@ -442,14 +442,18 @@ def create_customnode(
     cmds.connectAttr(input + ".worldMatrix[0]", detection_node + ".inputMatrix", f=True)
     cmds.connectAttr(parent + ".worldMatrix[0]", detection_node + ".parentMatrix", f=True)
 
-    input_world_pos = cmds.xform(input, q=True, ws=True, t=True)
-    parent_world_pos = cmds.xform(parent, q=True, ws=True, t=True)
-    vec = [
-        input_world_pos[0] - parent_world_pos[0],
-        input_world_pos[1] - parent_world_pos[1],
-        input_world_pos[2] - parent_world_pos[2],
-    ]
-    cmds.setAttr(detection_node + ".distance", math.sqrt(vec[0]**2 + vec[1]**2 + vec[2]**2))
+    try: # colDetectionNode <= 1.1.0
+        input_world_pos = cmds.xform(input, q=True, ws=True, t=True)
+        parent_world_pos = cmds.xform(parent, q=True, ws=True, t=True)
+        vec = [
+            input_world_pos[0] - parent_world_pos[0],
+            input_world_pos[1] - parent_world_pos[1],
+            input_world_pos[2] - parent_world_pos[2],
+        ]
+        cmds.setAttr(detection_node + ".distance", math.sqrt(vec[0]**2 + vec[1]**2 + vec[2]**2))
+    except: # colDetectionNode >= 1.2.0
+        # "distance" attribute is obsolete in colDetectionMtxNode 1.2.0 and later.
+        pass
     
     sphere_col_idx = 0
     capsule_col_idx = 0
