@@ -284,7 +284,7 @@ for prt, ipt, out in zip(parents, inputs, outputs):
     )
 ```
 
-# Note
+# Performance
 * A large number of detections can be very heavy.
 * The number of colliders cannot be changed after a detection (expression node) is created.
 
@@ -313,7 +313,7 @@ A custom node [colDetectionNode](https://github.com/akasaki1211/colDetectionNode
    * `scalable` is ignored, because scale is always in enabled.
 
 ```python
-### 2.1.0 or higher ###
+### 2.1.1 or higher ###
 
 from expcol import detection
 
@@ -341,3 +341,17 @@ detection.create(
 
 > **Note**  
 > The plugin **colDetectionNode.mll** is also required for the animation process.
+
+# Practical Example
+
+## Combine with mGear "chain_spring_01"
+[**chain_spring_add_collision.py**](https://gist.github.com/akasaki1211/ca89779097afcc2a5a784766d8bc056f) is a **Custom Step** that adds collision detection to [mGear](https://github.com/mgear-dev/mgear4) `chain_spring_01`. In addition, unlocked scale that the original `chain_spring_01` does not allow.  
+You can change the settings with the `config` function.  
+[[Demo](https://twitter.com/akasaki1211/status/1743857075091099980)]  
+
+**how to setup:**
+1. Install expcol 2.1.1 or later. 
+2. Create colliders with expcol and place it under a group named "collider_grp".
+3. Create chain_spring_01 guide(s).
+4. add `chain_spring_add_collision.py` to Post Custom Step.
+5. Build!
