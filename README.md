@@ -1,5 +1,6 @@
 # Overview
 ![Maya](https://img.shields.io/static/v1?message=Maya&color=0696D7&logo=Autodesk&logoColor=white&label=) ![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)  
+[日本語README](./README_ja.md)  
 
 `expcol` creates collision detection using only the built-in expression nodes of Maya.  
 No plugins or additional installations are required for the animation process. Only the rigging process requires these installations.  
