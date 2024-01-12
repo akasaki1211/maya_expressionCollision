@@ -1,4 +1,4 @@
-# Overview
+# Maya Expression Collision (`expcol`)
 ![Maya](https://img.shields.io/static/v1?message=Maya&color=0696D7&logo=Autodesk&logoColor=white&label=) ![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)  
 [日本語README](./README_ja.md)  
 
@@ -290,7 +290,7 @@ for prt, ipt, out in zip(parents, inputs, outputs):
 * The number of colliders cannot be changed after a detection (expression node) is created.
 
 ## Processing time⏱
-Processing time per joint measured using maya's profiler.  
+Below is the processing time per joint measured using Maya's profiler. The actual depend on the environment, please check it as a load comparison for each collider.  
 |Collider (Iteration:5)|Avg|
 |---|---|
 |sphere|32.57 us|
@@ -347,12 +347,12 @@ detection.create(
 
 ## Combine with mGear "chain_spring_01"
 [**chain_spring_add_collision.py**](https://gist.github.com/akasaki1211/ca89779097afcc2a5a784766d8bc056f) is a **Custom Step** that adds collision detection to [mGear](https://github.com/mgear-dev/mgear4) `chain_spring_01`. In addition, unlocked scale that the original `chain_spring_01` does not allow.  
-You can change the settings with the `config` function.  
+You can change the settings in the `config` function.  
 [[Demo](https://twitter.com/akasaki1211/status/1743857075091099980)]  
 
 **how to setup:**
 1. Install expcol 2.1.1 or later. 
 2. Create colliders with expcol and place it under a group named "collider_grp".
 3. Create chain_spring_01 guide(s).
-4. add `chain_spring_add_collision.py` to Post Custom Step.
+4. Add `chain_spring_add_collision.py` to Post Custom Step.
 5. Build!

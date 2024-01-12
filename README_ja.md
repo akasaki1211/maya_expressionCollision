@@ -1,4 +1,4 @@
-# Overview
+# Maya Expression Collision (`expcol`)
 ![Maya](https://img.shields.io/static/v1?message=Maya&color=0696D7&logo=Autodesk&logoColor=white&label=) ![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)  
 
 `expcol`はMaya標準のexpressionノードのみを使用してコリジョン検出を作成します。 
@@ -289,7 +289,7 @@ for prt, ipt, out in zip(parents, inputs, outputs):
 * コライダーの数はコリジョン検出（expressionノード）の作成後に変更することはできません。  
 
 ## 処理時間⏱
-Mayaのプロファイラを使用して計測した、1ジョイントあたりの処理時間。  
+以下は、Mayaのプロファイラを使用して計測した、1ジョイントあたりの処理時間です。実際の数値は環境に依存しますので、コライダーごとの負荷比較としてご確認下さい。  
 |Collider (Iteration:5)|Avg|
 |---|---|
 |sphere|32.57 us|
@@ -352,5 +352,5 @@ detection.create(
 1. expcol 2.1.1以降をインストール
 2. expcolでコライダー作って、"collider_grp"という名前のグループ直下に配置。
 3. chain_spring_01のガイド作成（複数可）
-4. postにchain_spring_add_collision.py追加
+4. Post Custom Stepに`chain_spring_add_collision.py`を追加
 5. ビルド！
