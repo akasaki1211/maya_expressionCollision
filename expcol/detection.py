@@ -207,7 +207,7 @@ def setupCollision(col, index, colliderType, scalable=False, *args):
         else:
             defineStr += "float $c{0}_radius = {1}.radius;\n\n".format(index, col)
 
-        detectionStr += "\tif (($c{0}_radius + $p_radius) > mag($p - $c{0}))\n".format(index)
+        detectionStr += "\tif (($c{0}_radius+$p_radius) * ($c{0}_radius+$p_radius) > dot($p-$c{0}, $p-$c{0}))\n".format(index)
         detectionStr += "\t{\n"
         detectionStr += "\t\t$p = $c{0} + (unit($p - $c{0}) * ($c{0}_radius + $p_radius));\n".format(index)
         detectionStr += "\t}\n\n"
@@ -242,20 +242,21 @@ def setupCollision(col, index, colliderType, scalable=False, *args):
         defineStr += "vector $c{0}ab = unit($c{0}b-$c{0}a);\n\n".format(index)
 
         detectionStr += "\tfloat $t{0} = dot($c{0}ab,($p-$c{0}a));\n".format(index)
+        detectionStr += "\tfloat $sq_rad_sum{0} = ($c{0}_radius + $p_radius) * ($c{0}_radius + $p_radius);\n".format(index)
         detectionStr += "\tif($t{0}/$c{0}_height <= 0)\n".format(index)
         detectionStr += "\t{\n"
-        detectionStr += "\t\tif(mag($p-$c{0}a) < ($c{0}_radius + $p_radius))\n".format(index)
+        detectionStr += "\t\tif(dot($p-$c{0}a, $p-$c{0}a) < $sq_rad_sum{0})\n".format(index)
         detectionStr += "\t\t\t$p = $c{0}a + (unit($p-$c{0}a) * ($c{0}_radius + $p_radius));\n".format(index)
         detectionStr += "\t}\n"
         detectionStr += "\telse if($t{0}/$c{0}_height >= 1)\n".format(index)
         detectionStr += "\t{\n"
-        detectionStr += "\t\tif(mag($p-$c{0}b) < ($c{0}_radius + $p_radius))\n".format(index)
+        detectionStr += "\t\tif(dot($p-$c{0}b, $p-$c{0}b) < $sq_rad_sum{0})\n".format(index)
         detectionStr += "\t\t\t$p = $c{0}b + (unit($p-$c{0}b) * ($c{0}_radius + $p_radius));\n".format(index)
         detectionStr += "\t}\n"
         detectionStr += "\telse\n"
         detectionStr += "\t{\n"
         detectionStr += "\t\tvector $q = $c{0}a + ($c{0}ab * $t{0});\n".format(index)
-        detectionStr += "\t\tif(mag($p-$q) < ($c{0}_radius + $p_radius))\n".format(index)
+        detectionStr += "\t\tif(dot($p-$q, $p-$q) < $sq_rad_sum{0})\n".format(index)
         detectionStr += "\t\t\t$p = $q + (unit($p-$q) * ($c{0}_radius + $p_radius));\n".format(index)
         detectionStr += "\t}\n\n"
 
@@ -281,19 +282,19 @@ def setupCollision(col, index, colliderType, scalable=False, *args):
         detectionStr += "\tfloat $ratio{0} = $t{0}/$c{0}_height;\n".format(index)
         detectionStr += "\tif($ratio{0} <= 0)\n".format(index)
         detectionStr += "\t{\n"
-        detectionStr += "\t\tif(mag($p-$c{0}a) < ($c{0}a_radius + $p_radius))\n".format(index)
+        detectionStr += "\t\tif(dot($p-$c{0}a, $p-$c{0}a) < ($c{0}a_radius + $p_radius) * ($c{0}a_radius + $p_radius))\n".format(index)
         detectionStr += "\t\t\t$p = $c{0}a + (unit($p-$c{0}a) * ($c{0}a_radius + $p_radius));\n".format(index)
         detectionStr += "\t}\n"
         detectionStr += "\telse if($ratio{0} >= 1)\n".format(index)
         detectionStr += "\t{\n"
-        detectionStr += "\t\tif(mag($p-$c{0}b) < ($c{0}b_radius + $p_radius))\n".format(index)
+        detectionStr += "\t\tif(dot($p-$c{0}b, $p-$c{0}b) < ($c{0}b_radius + $p_radius) * ($c{0}b_radius + $p_radius))\n".format(index)
         detectionStr += "\t\t\t$p = $c{0}b + (unit($p-$c{0}b) * ($c{0}b_radius + $p_radius));\n".format(index)
         detectionStr += "\t}\n"
         detectionStr += "\telse\n"
         detectionStr += "\t{\n"
         detectionStr += "\t\tvector $q = $c{0}a + ($c{0}ab * $t{0});\n".format(index)
         detectionStr += "\t\tfloat $r = $c{0}a_radius * (1.0 - $ratio{0}) + $c{0}b_radius * $ratio{0};\n".format(index)
-        detectionStr += "\t\tif(mag($p-$q) < ($r + $p_radius))\n".format(index)
+        detectionStr += "\t\tif(dot($p-$q, $p-$q) < ($r + $p_radius) * ($r + $p_radius))\n".format(index)
         detectionStr += "\t\t\t$p = $q + (unit($p-$q) * ($r + $p_radius));\n".format(index)
         detectionStr += "\t}\n\n"
     
